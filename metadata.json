@@ -1,0 +1,6 @@
+{
+  "name": "Ember & Stone",
+  "description": "A dark, editorial fine dining steakhouse website featuring artisanal craft, fire-forward cuisine, and an immersive reservation experience.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

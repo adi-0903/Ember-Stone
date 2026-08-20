@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: hsl(24, 30%, 4%);         /* #0d0905 deep espresso */
+    --foreground: hsl(40, 33%, 91%);        /* #f5f0e8 off-white */
+    --primary: hsl(37, 55%, 51%);           /* #c9973e warm amber/gold */
+    --primary-foreground: hsl(24, 30%, 4%); /* #0d0905 */
+    --muted-foreground: hsl(40, 15%, 60%);  /* muted warm grey */
+    --border: hsl(37, 40%, 25%);            /* dark amber border */
+    --card: hsl(24, 28%, 7%);               /* slightly lighter card bg */
+    --accent: hsl(37, 55%, 51%);            /* gold */
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, "Plus Jakarta Sans", Arial, sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Cormorant Garamond', Garamond, Georgia, serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0905;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a2816;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c9973e;
+}
+
+/* Glassmorphism and glow utilities */
+.gold-glow {
+  box-shadow: 0 0 24px rgba(201, 151, 62, 0.25);
+}
+
+.gold-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(201, 151, 62, 0.35);
+}
+
+.gold-border-glow {
+  border-color: rgba(201, 151, 62, 0.6);
+  box-shadow: 0 0 15px rgba(201, 151, 62, 0.2);
+}
+
+/* Noise overlay */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+}
