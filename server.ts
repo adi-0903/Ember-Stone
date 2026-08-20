@@ -16,10 +16,29 @@ interface ReservationPayload {
   confirmationCode?: string;
 }
 
+function escapeHtml(unsafe: string | undefined): string {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * Builds the VIP luxury HTML Email template
  */
 function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode: string): string {
+  const safeName = escapeHtml(payload.name);
+  const safeEmail = escapeHtml(payload.email);
+  const safePhone = escapeHtml(payload.phone);
+  const safeCountryCode = escapeHtml(payload.countryCode);
+  const safeSpecialRequests = escapeHtml(payload.specialRequests);
+  const safePartySize = escapeHtml(payload.partySize);
+  const safeDate = escapeHtml(payload.date);
+  const safeTime = escapeHtml(payload.time);
+
   const seatingText =
     payload.seatingPreference === 'chefs_counter'
       ? "Chef's Hearth Counter"
@@ -36,11 +55,11 @@ function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode
       ? '🥩 Prime Cuts / Non-Veg Focus'
       : '🌍 Omnivore / Mixed Party';
 
-  const specialNotesBlock = payload.specialRequests
+  const specialNotesBlock = safeSpecialRequests
     ? `
     <tr>
       <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Special Notes</td>
-      <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px;">${payload.specialRequests}</td>
+      <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px;">${safeSpecialRequests}</td>
     </tr>
     `
     : '';
@@ -50,7 +69,7 @@ function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode
   const checkinParams = new URLSearchParams({
     checkin: 'true',
     ref: confirmationCode,
-    name: payload.name || 'VIP Guest',
+    name: payload.name || 'VIP Guest', // URLSearchParams encodes it automatically
     party: payload.partySize || '2 Guests',
     date: payload.date || '',
     time: payload.time || '',
@@ -96,7 +115,7 @@ function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode
                 ✓ TABLE RESERVATION CONFIRMED
               </span>
               <h2 style="margin: 18px 0 5px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; color: #f5f0e8; font-weight: 400;">
-                We look forward to hosting you, <span style="color: #c9973e;">${payload.name}</span>.
+                We look forward to hosting you, <span style="color: #c9973e;">${safeName}</span>.
               </h2>
               <p style="margin: 0; font-size: 13px; color: rgba(245, 240, 232, 0.7); line-height: 1.5;">
                 Your table has been reserved in our system. Please present this QR pass upon arrival at the host stand.
@@ -136,15 +155,15 @@ function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #18110a; border: 1px solid #2a1c10; border-radius: 4px;">
                 <tr>
                   <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; width: 35%;">Guest Name</td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">👤 ${payload.name}</td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">👤 ${safeName}</td>
                 </tr>
                 <tr>
                   <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Party Size</td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">👥 ${payload.partySize}</td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">👥 ${safePartySize}</td>
                 </tr>
                 <tr>
                   <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Date & Time</td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">📅 ${payload.date} at ⏰ ${payload.time}</td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #f5f0e8; font-size: 13px; font-weight: 600;">📅 ${safeDate} at ⏰ ${safeTime}</td>
                 </tr>
                 <tr>
                   <td style="padding: 12px 18px; border-bottom: 1px solid #2a1c10; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Seating Area</td>
@@ -157,7 +176,7 @@ function buildReservationEmailHtml(payload: ReservationPayload, confirmationCode
                 ${specialNotesBlock}
                 <tr>
                   <td style="padding: 12px 18px; color: #c9973e; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Contact</td>
-                  <td style="padding: 12px 18px; color: #f5f0e8; font-size: 13px;">${payload.email} • ${payload.countryCode || ''} ${payload.phone}</td>
+                  <td style="padding: 12px 18px; color: #f5f0e8; font-size: 13px;">${safeEmail} • ${safeCountryCode || ''} ${safePhone}</td>
                 </tr>
               </table>
             </td>
@@ -529,6 +548,11 @@ async function startServer() {
         createdAt: new Date().toISOString(),
       });
 
+      // Keep only the 1,000 most recent reservations in memory to prevent memory leaks
+      if (reservationsStore.length > 1000) {
+        reservationsStore.pop();
+      }
+
       console.log(`[BACKEND AUTO-DISPATCH] Reservation ${confirmationCode} processed for ${payload.email}`);
 
       return res.json({
@@ -587,8 +611,11 @@ async function startServer() {
 
       // Fallback verification for demo codes / existing formatted tickets
       if (cleanCode.startsWith('ES-') && cleanCode.length >= 6) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dynamicFallbackDate = tomorrow.toISOString().split('T')[0];
         const sampleReservation: ReservationPayload = {
-          date: '2026-08-20',
+          date: dynamicFallbackDate,
           time: '7:00 PM',
           partySize: '2 Guests',
           name: 'Krillin Winnin',
@@ -644,8 +671,12 @@ async function startServer() {
           email: targetEmail?.trim() || match.payload.email,
         };
       } else {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dynamicFallbackDate = tomorrow.toISOString().split('T')[0];
+
         reservationData = {
-          date: req.body.date || '2026-08-20',
+          date: req.body.date || dynamicFallbackDate,
           time: req.body.time || '7:00 PM',
           partySize: req.body.partySize || '2 Guests',
           name: req.body.name || 'Honored VIP Guest',
