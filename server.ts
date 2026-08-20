@@ -1,6 +1,8 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
 interface ReservationPayload {
   date: string;
@@ -14,6 +16,37 @@ interface ReservationPayload {
   dietaryPreference?: string;
   specialRequests?: string;
   confirmationCode?: string;
+}
+
+const reservationSchema = z.object({
+  date: z.string().min(1),
+  time: z.string().min(1),
+  partySize: z.string().min(1),
+  name: z.string().min(1),
+  countryCode: z.string().optional(),
+  phone: z.string().min(1),
+  email: z.string().email(),
+  seatingPreference: z.string().optional(),
+  dietaryPreference: z.string().optional(),
+  specialRequests: z.string().optional(),
+  confirmationCode: z.string().optional(),
+});
+
+async function fetchWithTimeout(resource: string | URL, options: RequestInit & { timeout?: number } = {}) {
+  const { timeout = 8000 } = options;
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 function escapeHtml(unsafe: string | undefined): string {
@@ -231,6 +264,25 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Basic rate limiters
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const reservationLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // limit each IP to 10 reservations per hour
+    message: 'Too many reservations created from this IP, please try again after an hour',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  app.use('/api/', apiLimiter);
+
   // In-memory reservation log for demo and inspection
   const reservationsStore: Array<{
     id: string;
@@ -337,14 +389,14 @@ async function startServer() {
       // Try primary API mirror then fallback
       let data: any = null;
       try {
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=15`
         );
         data = await response.json();
       } catch (err) {
         console.warn('[MUSIC API] Primary mirror failed, trying secondary...', err);
         try {
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             `https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&limit=15`
           );
           data = await response.json();
@@ -387,7 +439,7 @@ async function startServer() {
 
       for (const query of CURATED_90S_QUERIES) {
         try {
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=1`
           );
           const data = (await response.json()) as any;
@@ -444,15 +496,18 @@ async function startServer() {
   });
 
   // Automated Booking & Email Dispatch Endpoint
-  app.post('/api/reservations/book', async (req, res) => {
+  app.post('/api/reservations/book', reservationLimiter, async (req, res) => {
     try {
-      const payload: ReservationPayload = req.body;
+      const parsedBody = reservationSchema.safeParse(req.body);
 
-      if (!payload.name || !payload.email || !payload.date || !payload.time) {
+      if (!parsedBody.success) {
         return res.status(400).json({
-          error: 'Missing required reservation fields (name, email, date, time).',
+          error: 'Invalid reservation payload',
+          details: parsedBody.error.issues,
         });
       }
+
+      const payload: ReservationPayload = parsedBody.data;
 
       const confirmationCode =
         payload.confirmationCode ||
@@ -480,60 +535,42 @@ async function startServer() {
       const resendApiKey = process.env.RESEND_API_KEY?.trim();
 
       if (resendApiKey) {
-        try {
-          const senderEmail = process.env.SENDER_EMAIL?.trim() || 'onboarding@resend.dev';
+        const senderEmail = process.env.SENDER_EMAIL?.trim() || 'onboarding@resend.dev';
 
-          console.log(`[RESEND DISPATCH] Attempting real email send to ${payload.email} via sender ${senderEmail}...`);
+        console.log(`[RESEND DISPATCH] Queuing real email send to ${payload.email} via sender ${senderEmail}...`);
 
-          const resendResponse = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: senderEmail.includes('<') ? senderEmail : `Ember & Stone <${senderEmail}>`,
-              to: [payload.email],
-              subject: `🔥 Table Reservation Confirmed: ${confirmationCode} - Ember & Stone Steakhouse`,
-              html: emailHtml,
-            }),
-          });
-
-          const resendData = await resendResponse.json() as any;
-
-          if (resendResponse.ok && resendData?.id) {
-            console.log(`[RESEND SUCCESS] Email sent! ID: ${resendData.id}`);
-            emailResult = {
-              success: true,
-              status: 'sent',
-              provider: 'Resend Cloud API',
-              messageId: resendData.id,
-              recipient: payload.email,
-              details: `Real reservation confirmation email delivered to ${payload.email}`,
-            };
+        // Fire-and-forget: we don't await the fetch call to avoid blocking the response
+        fetchWithTimeout('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: senderEmail.includes('<') ? senderEmail : `Ember & Stone <${senderEmail}>`,
+            to: [payload.email],
+            subject: `🔥 Table Reservation Confirmed: ${confirmationCode} - Ember & Stone Steakhouse`,
+            html: emailHtml,
+          }),
+        }).then(res => res.json()).then((resendData: any) => {
+          if (resendData?.id) {
+            console.log(`[RESEND SUCCESS] Email sent async! ID: ${resendData.id}`);
           } else {
-            console.warn('[RESEND WARNING] Resend returned non-OK status:', resendData);
-            const errDetail = resendData?.message || resendData?.error?.message || 'Verification pending';
-            emailResult = {
-              success: true,
-              status: 'sent',
-              provider: 'Resend API (Processed)',
-              messageId: `RESEND-${Date.now()}`,
-              recipient: payload.email,
-              details: `Delivered pass to ${payload.email} (${errDetail})`,
-            };
+            console.warn('[RESEND WARNING] Resend returned non-OK async status:', resendData);
           }
-        } catch (resendErr: any) {
-          console.error('[EMAIL ERROR] Resend dispatch exception:', resendErr);
-          emailResult = {
-            success: true,
-            status: 'sent',
-            provider: 'Ember & Stone Email Engine',
-            messageId: `EM-FALLBACK-${Date.now()}`,
-            recipient: payload.email,
-            details: `Dining pass processed for ${payload.email}`,
-          };
-        }
+        }).catch((resendErr: any) => {
+          console.error('[EMAIL ERROR] Resend async dispatch exception:', resendErr);
+        });
+
+        // We assume success for the response payload to remain fast
+        emailResult = {
+          success: true,
+          status: 'simulated_dispatched', // Or 'sent' since we queued it
+          provider: 'Resend Cloud API (Queued)',
+          messageId: `RESEND-QUEUED-${Date.now()}`,
+          recipient: payload.email,
+          details: `Real reservation confirmation email queued for ${payload.email}`,
+        };
       } else {
         console.log(`[INFO] No RESEND_API_KEY detected in env. Using simulated dispatch engine.`);
       }
@@ -675,7 +712,7 @@ async function startServer() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dynamicFallbackDate = tomorrow.toISOString().split('T')[0];
 
-        reservationData = {
+        const fallbackData = {
           date: req.body.date || dynamicFallbackDate,
           time: req.body.time || '7:00 PM',
           partySize: req.body.partySize || '2 Guests',
@@ -686,6 +723,12 @@ async function startServer() {
           dietaryPreference: req.body.dietaryPreference || 'all',
           specialRequests: req.body.specialRequests || '',
         };
+
+        const parsedFallback = reservationSchema.safeParse(fallbackData);
+        if (!parsedFallback.success) {
+            return res.status(400).json({ error: 'Invalid payload details provided for fallback generation', details: parsedFallback.error.issues });
+        }
+        reservationData = parsedFallback.data;
       }
 
       const emailHtml = buildReservationEmailHtml(reservationData, cleanCode);
@@ -700,36 +743,37 @@ async function startServer() {
       };
 
       if (resendApiKey) {
-        try {
-          const senderEmail = process.env.SENDER_EMAIL?.trim() || 'onboarding@resend.dev';
-          const resendResponse = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: senderEmail.includes('<') ? senderEmail : `Ember & Stone <${senderEmail}>`,
-              to: [reservationData.email],
-              subject: `🔥 [Re-Sent Pass] Table Reservation & QR Code: ${cleanCode} - Ember & Stone`,
-              html: emailHtml,
-            }),
-          });
+        const senderEmail = process.env.SENDER_EMAIL?.trim() || 'onboarding@resend.dev';
 
-          const resendData = (await resendResponse.json()) as any;
-          if (resendResponse.ok && resendData?.id) {
-            dispatchResult = {
-              success: true,
-              status: 'sent',
-              provider: 'Resend Cloud API',
-              messageId: resendData.id,
-              recipient: reservationData.email,
-              details: `Real reservation confirmation & QR code re-delivered to ${reservationData.email}`,
-            };
+        // Fire-and-forget
+        fetchWithTimeout('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: senderEmail.includes('<') ? senderEmail : `Ember & Stone <${senderEmail}>`,
+            to: [reservationData.email],
+            subject: `🔥 [Re-Sent Pass] Table Reservation & QR Code: ${cleanCode} - Ember & Stone`,
+            html: emailHtml,
+          }),
+        }).then(res => res.json()).then((resendData: any) => {
+          if (resendData?.id) {
+             console.log(`[PASS RE-DISPATCHED ASYNC] Pass ${cleanCode} re-sent to ${reservationData.email}`);
           }
-        } catch (resendErr) {
-          console.error('[RESEND RESEND_ERROR]', resendErr);
-        }
+        }).catch(resendErr => {
+          console.error('[RESEND RESEND_ERROR_ASYNC]', resendErr);
+        });
+
+        dispatchResult = {
+          success: true,
+          status: 'simulated_dispatched',
+          provider: 'Resend Cloud API (Queued)',
+          messageId: `RESEND-QUEUED-${Date.now()}`,
+          recipient: reservationData.email,
+          details: `Real reservation confirmation & QR code re-delivery queued to ${reservationData.email}`,
+        };
       }
 
       console.log(`[PASS RE-DISPATCHED] Pass ${cleanCode} re-sent to ${reservationData.email}`);
@@ -768,9 +812,23 @@ async function startServer() {
     });
   }
 
+  // Global Error Handler Middleware
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[EXPRESS UNHANDLED ERROR]:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[SERVER] Ember & Stone Backend running on http://0.0.0.0:${PORT}`);
   });
 }
+
+// Process-level unhandled exception/rejection listeners to prevent crash
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[PROCESS] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[PROCESS] Uncaught Exception:', err);
+});
 
 startServer();
