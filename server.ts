@@ -254,11 +254,11 @@ async function startServer() {
       year: '1992',
       durationSeconds: 293,
       durationFormatted: '4:53',
-      audioUrl: 'https://aac.saavncdn.com/852/9d335ee08b26f171a3d65e11f8819d52_sar_320.mp4',
+      audioUrl: 'https://aac.saavncdn.com/852/9d335ee08b26f171a3d65e11f8819d52_sar_96.mp4',
       imageUrl: 'https://c.saavncdn.com/852/Jo-Jeeta-Wohi-Sikandar-Hindi-1992-500x500.jpg',
       category: 'Midnight Romance',
       vibeQuote: '“Chahe tum kuch na kaho, maine sun liya...”',
-      label: 'Saregama',
+      label: 'HMV / Saregama',
     },
     {
       id: 't2',
@@ -266,10 +266,10 @@ async function startServer() {
       movie: 'Dilwale Dulhania Le Jayenge',
       singers: 'Kumar Sanu · Lata Mangeshkar',
       year: '1995',
-      durationSeconds: 302,
-      durationFormatted: '5:02',
-      audioUrl: 'https://aac.saavncdn.com/835/67ea6406e12e1329fe5d996be4bca81c_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/835/Dilwale-Dulhania-Le-Jayenge-Hindi-1995-500x500.jpg',
+      durationSeconds: 303,
+      durationFormatted: '5:03',
+      audioUrl: 'https://aac.saavncdn.com/588/1915cd0934f79eeb646ffebde384e59d_sar_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/588/Dilwale-Dulhania-Le-Jayenge-Hindi-1995-20171114-500x500.jpg',
       category: 'Midnight Romance',
       vibeQuote: '“Bade bade deshon mein aisi choti choti baatein hoti rehti hain...”',
       label: 'YRF Music',
@@ -280,10 +280,10 @@ async function startServer() {
       movie: 'Main Khiladi Tu Anari',
       singers: 'Kumar Sanu · Alka Yagnik',
       year: '1994',
-      durationSeconds: 468,
-      durationFormatted: '7:48',
-      audioUrl: 'https://aac.saavncdn.com/978/dbb2a5efc272bc9776d6c29b7feffb82_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/978/Main-Khiladi-Tu-Anari-Hindi-1994-500x500.jpg',
+      durationSeconds: 474,
+      durationFormatted: '7:54',
+      audioUrl: 'https://aac.saavncdn.com/274/7fef90c6c49981cb50403835234722da_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/274/Main-Khiladi-Tu-Anari-With-Jhankar-Beats-Hindi-2024-20240125184145-500x500.jpg',
       category: '90s Dance Party',
       vibeQuote: '“Chura ke dil mera goriya chali...”',
       label: 'Venus Worldwide',
@@ -296,8 +296,8 @@ async function startServer() {
       year: '1993',
       durationSeconds: 459,
       durationFormatted: '7:39',
-      audioUrl: 'https://aac.saavncdn.com/024/7744318c21a4855ad6cbba1723469e84_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/024/Baazigar-Hindi-1993-500x500.jpg',
+      audioUrl: 'https://aac.saavncdn.com/409/b05d8a94d4347e8093228d9f1fca3f07_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/409/Baazigar-Hindi-1993-20210226141521-500x500.jpg',
       category: '90s Dance Party',
       vibeQuote: '“Kabhi kabhi jeetne ke liye kuch haarna padta hai...”',
       label: 'Venus Worldwide',
@@ -310,8 +310,8 @@ async function startServer() {
       year: '1998',
       durationSeconds: 297,
       durationFormatted: '4:57',
-      audioUrl: 'https://aac.saavncdn.com/880/d36fe1bcba217ef28d6c81bb6cfaec95_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/880/Kuch-Kuch-Hota-Hai-Hindi-1998-500x500.jpg',
+      audioUrl: 'https://aac.saavncdn.com/416/cd8b074ef18d3fc92b191dffecd48810_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/416/A-Decade-of-Love-Hindi-2010-20260120201240-500x500.jpg',
       category: 'Midnight Romance',
       vibeQuote: '“Pyaar dosti hai... agar woh meri sabse achhi dost nahi ban sakti to...”',
       label: 'Sony Music India',
@@ -324,8 +324,8 @@ async function startServer() {
       year: '1991',
       durationSeconds: 324,
       durationFormatted: '5:24',
-      audioUrl: 'https://aac.saavncdn.com/949/bc00ebfc265b75f9fe729ecf61e8ce12_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/949/Saajan-Hindi-1991-500x500.jpg',
+      audioUrl: 'https://aac.saavncdn.com/665/de0a8b637a12c58dc7a725dae88bba26_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/665/Mera-Dil-Bhi-Kitna-Pagal-Hai-Recreated-Hindi-2018-20180623-500x500.jpg',
       category: 'Dard-E-Dil Classics',
       vibeQuote: '“Samne jab tum aate ho, kuch bhi kehne se darta hai...”',
       label: 'Venus Records',
@@ -338,8 +338,8 @@ async function startServer() {
       year: '1999',
       durationSeconds: 300,
       durationFormatted: '5:00',
-      audioUrl: 'https://aac.saavncdn.com/581/b9bfda468e22543088b90cff36d4ff4f_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/581/Hum-Dil-De-Chuke-Sanam-Hindi-1999-500x500.jpg',
+      audioUrl: 'https://aac.saavncdn.com/963/d689c4f2d59313a0ac8c38e5cf5a1223_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/963/Hum-Dil-De-Chuke-Sanam-Hindi-1999-20221128131837-500x500.jpg',
       category: 'Midnight Romance',
       vibeQuote: '“Aankhon ki sharm-o-haya maaf ho...”',
       label: 'T-Series',
@@ -350,66 +350,108 @@ async function startServer() {
       movie: 'Mohra',
       singers: 'Udit Narayan · Alka Yagnik',
       year: '1994',
-      durationSeconds: 358,
-      durationFormatted: '5:58',
-      audioUrl: 'https://aac.saavncdn.com/712/3752e3914a1a3e8e19b5bfb14e9f7ee2_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/712/Mohra-Hindi-1994-500x500.jpg',
+      durationSeconds: 363,
+      durationFormatted: '6:03',
+      audioUrl: 'https://aac.saavncdn.com/041/c9c7533375a46d285bc156a2212fdbb5_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/041/Mohra-Hindi-1994-20210226141759-500x500.jpg',
       category: 'Monsoon Rain & Chai',
       vibeQuote: '“Paani ne aag lagayi, aag lagi dil mein...”',
-      label: 'Venus Records',
+      label: 'Venus Worldwide',
     },
     {
       id: 't9',
-      title: 'Hoshwalon Ko Khabar Kya',
-      movie: 'Sarfarosh',
-      singers: 'Jagjit Singh',
-      year: '1999',
-      durationSeconds: 302,
-      durationFormatted: '5:02',
-      audioUrl: 'https://aac.saavncdn.com/131/a0fe5c8623ebc4e3663a8a3a29631626_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/131/Sarfarosh-Hindi-1999-500x500.jpg',
-      category: 'Speakeasy Ghazals',
-      vibeQuote: '“Bekhudi kya cheez hai... ishq kijiye phir samajhiye...”',
-      label: 'Tips Official',
-    },
-    {
-      id: 't10',
       title: 'Chaiyya Chaiyya',
       movie: 'Dil Se',
       singers: 'Sukhwinder Singh · Sapna Awasthi',
       year: '1998',
-      durationSeconds: 395,
-      durationFormatted: '6:35',
-      audioUrl: 'https://aac.saavncdn.com/001/a5b172a6b29f9e7188737e6f33230a10_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/001/Dil-Se-Hindi-1998-500x500.jpg',
+      durationSeconds: 410,
+      durationFormatted: '6:50',
+      audioUrl: 'https://aac.saavncdn.com/430/a0e785e625b39386d732980405119e3b_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/430/Dil-Se-Hindi-1998-20210226142402-500x500.jpg',
       category: '90s Dance Party',
       vibeQuote: '“Jinke sar ho ishq ki chhaon, paon ke neeche jannat hogi...”',
-      label: 'Venus Worldwide',
+      label: 'Venus Records',
+    },
+    {
+      id: 't10',
+      title: 'Kal Ho Naa Ho',
+      movie: 'Kal Ho Naa Ho',
+      singers: 'Sonu Nigam',
+      year: '2003',
+      durationSeconds: 321,
+      durationFormatted: '5:21',
+      audioUrl: 'https://aac.saavncdn.com/587/d3bd1ed49eb108d2425e4875cc3ad86e_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/587/Kal-Ho-Naa-Ho-Hindi-2003-20190516130956-500x500.jpg',
+      category: 'Dard-E-Dil Classics',
+      vibeQuote: '“Har ghadi badal rahi hai roop zindagi...”',
+      label: 'Sony Music India',
     },
     {
       id: 't11',
+      title: 'Suraj Hua Maddham',
+      movie: 'Kabhi Khushi Kabhie Gham',
+      singers: 'Sonu Nigam · Alka Yagnik',
+      year: '2001',
+      durationSeconds: 428,
+      durationFormatted: '7:08',
+      audioUrl: 'https://aac.saavncdn.com/778/c9c52c1295f9053c008f2d49b0339a88_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/778/Kabhi-Khushi-Kabhie-Gham-Hindi-2001-20190516150535-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Suraj hua maddham, chaand jalne laga...”',
+      label: 'Sony Music',
+    },
+    {
+      id: 't12',
+      title: 'Agar Tum Saath Ho',
+      movie: 'Tamasha',
+      singers: 'Arijit Singh · Alka Yagnik',
+      year: '2015',
+      durationSeconds: 341,
+      durationFormatted: '5:41',
+      audioUrl: 'https://aac.saavncdn.com/994/2e6b47719cea3e7c9f971a3f1ddc9b0a_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/994/Tamasha-Hindi-2015-500x500.jpg',
+      category: 'Dard-E-Dil Classics',
+      vibeQuote: '“Pal bhar theher jao, dil ye sambhal jaye...”',
+      label: 'T-Series',
+    },
+    {
+      id: 't13',
+      title: 'Tum Hi Ho',
+      movie: 'Aashiqui 2',
+      singers: 'Arijit Singh',
+      year: '2013',
+      durationSeconds: 262,
+      durationFormatted: '4:22',
+      audioUrl: 'https://aac.saavncdn.com/430/5c5ea5cc00e3bff45616013226f376fe_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/430/Aashiqui-2-Hindi-2013-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Kyunki tum hi ho, ab tum hi ho, zindagi ab tum hi ho...”',
+      label: 'T-Series',
+    },
+    {
+      id: 't14',
       title: 'Bahon Ke Darmiyan',
       movie: 'Khamoshi: The Musical',
       singers: 'Hariharan · Alka Yagnik',
       year: '1996',
-      durationSeconds: 367,
-      durationFormatted: '6:07',
-      audioUrl: 'https://aac.saavncdn.com/712/3752e3914a1a3e8e19b5bfb14e9f7ee2_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/712/Mohra-Hindi-1994-500x500.jpg',
+      durationSeconds: 409,
+      durationFormatted: '6:49',
+      audioUrl: 'https://aac.saavncdn.com/128/4cd28ffd97b592eebd23541e3d5f4d69_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/128/Khamoshi-The-Musical-Hindi-2008-20241007175121-500x500.jpg',
       category: 'Midnight Romance',
       vibeQuote: '“Bahon ke darmiyan do pyar mil rahe hain...”',
       label: 'PolyGram',
     },
     {
-      id: 't12',
+      id: 't15',
       title: 'Yeh Kaali Kaali Aankhen',
       movie: 'Baazigar',
       singers: 'Kumar Sanu · Anu Malik',
       year: '1993',
-      durationSeconds: 432,
-      durationFormatted: '7:12',
-      audioUrl: 'https://aac.saavncdn.com/024/7744318c21a4855ad6cbba1723469e84_320.mp4',
-      imageUrl: 'https://c.saavncdn.com/024/Baazigar-Hindi-1993-500x500.jpg',
+      durationSeconds: 473,
+      durationFormatted: '7:53',
+      audioUrl: 'https://aac.saavncdn.com/409/06e0144d4bd89678129361c4dceb69bf_96.mp4',
+      imageUrl: 'https://c.saavncdn.com/409/Baazigar-Hindi-1993-20210226141521-500x500.jpg',
       category: '90s Dance Party',
       vibeQuote: '“Yeh kaali kaali aankhen, yeh gore gore gaal...”',
       label: 'Venus Records',
@@ -436,8 +478,7 @@ async function startServer() {
       });
       const url = decrypted.toString(CryptoJS.enc.Utf8);
       if (!url || !url.startsWith('http')) return null;
-      // Upgrade to lossless 320kbps stream if available, otherwise 160kbps/96kbps
-      return url.replace(/_96\.(mp4|mp3)/, '_320.$1').replace(/_160\.(mp4|mp3)/, '_320.$1');
+      return url;
     } catch {
       return null;
     }
@@ -468,6 +509,69 @@ async function startServer() {
       return null;
     }
   }
+
+  // Audio Stream Proxy to securely stream full tracks bypassing CORS and CDN hotlink protections
+  app.get('/api/music/stream', async (req, res) => {
+    const rawUrl = (req.query.url as string) || '';
+    if (!rawUrl || !rawUrl.startsWith('http')) {
+      return res.status(400).send('Invalid audio URL');
+    }
+
+    try {
+      const rangeHeader = req.headers.range;
+      const headers: Record<string, string> = {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Referer': 'https://www.jiosaavn.com/',
+        'Accept': '*/*',
+      };
+
+      if (rangeHeader) {
+        headers['Range'] = rangeHeader;
+      }
+
+      let upstreamRes = await fetch(rawUrl, { headers });
+
+      // If 320kbps format not found or rejected, try 160kbps or fallback
+      if (!upstreamRes.ok && upstreamRes.status !== 206 && rawUrl.includes('_320.')) {
+        const fallback160 = rawUrl.replace('_320.', '_160.');
+        const retryRes = await fetch(fallback160, { headers });
+        if (retryRes.ok || retryRes.status === 206) {
+          upstreamRes = retryRes;
+        }
+      }
+
+      if (!upstreamRes.ok && upstreamRes.status !== 206) {
+        return res.status(upstreamRes.status).send('Upstream audio stream unavailable');
+      }
+
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      
+      const contentType = upstreamRes.headers.get('content-type') || (rawUrl.endsWith('.mp3') ? 'audio/mpeg' : 'audio/mp4');
+      res.setHeader('Content-Type', contentType);
+
+      const contentLength = upstreamRes.headers.get('content-length');
+      if (contentLength) {
+        res.setHeader('Content-Length', contentLength);
+      }
+
+      const contentRange = upstreamRes.headers.get('content-range');
+      if (contentRange) {
+        res.setHeader('Content-Range', contentRange);
+      }
+
+      res.status(upstreamRes.status);
+
+      const arrayBuffer = await upstreamRes.arrayBuffer();
+      res.end(Buffer.from(arrayBuffer));
+    } catch (err: any) {
+      if (!res.headersSent) {
+        res.status(500).send('Stream error');
+      }
+    }
+  });
 
   // Song search endpoint
   app.get('/api/music/search', async (req, res) => {

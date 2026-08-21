@@ -20,29 +20,43 @@ import {
   Moon,
   Disc3,
   X,
-  Sliders
+  Sliders,
+  Repeat
 } from 'lucide-react';
 import { BollywoodTrack } from '../types';
-import { INITIAL_CURATED_TRACKS, VIBE_CATEGORIES } from '../data/bollywoodTracks';
-
-type SpeedMode = 0.85 | 1.0 | 1.15;
+import { VIBE_CATEGORIES } from '../data/bollywoodTracks';
+import { useMusicContext, SpeedMode } from '../context/MusicContext';
 
 export default function HearthMusicPlayer() {
-  const [playlist, setPlaylist] = useState<BollywoodTrack[]>(INITIAL_CURATED_TRACKS);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(293);
-  const [volume, setVolume] = useState(0.85);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showDrawer, setShowDrawer] = useState(false);
-  const [isLooping, setIsLooping] = useState(false);
+  const {
+    playlist,
+    currentTrackIndex,
+    activeTrack,
+    isPlaying,
+    isLoading,
+    currentTime,
+    duration,
+    volume,
+    isMuted,
+    isLooping,
+    speedMode,
+    tapeHiss,
+    fireCrackle,
+    togglePlay,
+    playTrack,
+    nextTrack,
+    prevTrack,
+    seekTo,
+    setVolume,
+    toggleMute,
+    toggleLoop,
+    setSpeedMode,
+    setTapeHiss,
+    setFireCrackle,
+    searchSongs,
+  } = useMusicContext();
 
-  // Extra Vibe Controls
-  const [tapeHiss, setTapeHiss] = useState(true);
-  const [fireCrackle, setFireCrackle] = useState(false);
-  const [speedMode, setSpeedMode] = useState<SpeedMode>(1.0);
+  const [showDrawer, setShowDrawer] = useState(false);
   const [showVibePanel, setShowVibePanel] = useState(false);
 
   // Search state
@@ -52,221 +66,14 @@ export default function HearthMusicPlayer() {
   const [activeTab, setActiveTab] = useState<'curated' | 'search'>('curated');
   const [selectedCategory, setSelectedCategory] = useState<string>('All Mixtapes');
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const masterGainRef = useRef<GainNode | null>(null);
-  const hissGainRef = useRef<GainNode | null>(null);
-  const crackleGainRef = useRef<GainNode | null>(null);
   const searchTimeoutRef = useRef<number | null>(null);
 
-  const activeTrack: BollywoodTrack =
-    playlist[currentTrackIndex] || INITIAL_CURATED_TRACKS[0];
-
-  // Fetch full curated set from server on mount
-  useEffect(() => {
-    async function loadCurated() {
-      try {
-        const res = await fetch('/api/music/curated');
-        const data = await res.json();
-        if (data.success && data.songs && data.songs.length > 0) {
-          const merged = [...data.songs];
-          INITIAL_CURATED_TRACKS.forEach((t) => {
-            const match = merged.find((m) => m.title.toLowerCase() === t.title.toLowerCase());
-            if (match) {
-              match.category = t.category;
-              match.vibeQuote = t.vibeQuote;
-            } else {
-              merged.push(t);
-            }
-          });
-          setPlaylist(merged);
-        }
-      } catch (err) {
-        console.warn('Using default curated playlist:', err);
-      }
-    }
-    loadCurated();
-  }, []);
-
-  // Web Audio Engine for analog tape hiss & fireplace crackle ambience
-  const initWebAudio = () => {
-    if (!audioCtxRef.current) {
-      try {
-        const AudioContextClass =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const ctx = new AudioContextClass();
-        audioCtxRef.current = ctx;
-
-        const masterGain = ctx.createGain();
-        masterGain.gain.setValueAtTime(volume, ctx.currentTime);
-        masterGain.connect(ctx.destination);
-        masterGainRef.current = masterGain;
-
-        // 1. Vintage Cassette Magnetic Tape Noise
-        const bufferSize = ctx.sampleRate * 2;
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const noiseOutput = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          noiseOutput[i] = (Math.random() * 2 - 1) * 0.012;
-        }
-
-        const tapeNoise = ctx.createBufferSource();
-        tapeNoise.buffer = noiseBuffer;
-        tapeNoise.loop = true;
-
-        const tapeFilter = ctx.createBiquadFilter();
-        tapeFilter.type = 'bandpass';
-        tapeFilter.frequency.setValueAtTime(1800, ctx.currentTime);
-        tapeFilter.Q.setValueAtTime(0.7, ctx.currentTime);
-
-        const hissGain = ctx.createGain();
-        hissGain.gain.setValueAtTime(tapeHiss ? 0.03 : 0, ctx.currentTime);
-
-        tapeNoise.connect(tapeFilter);
-        tapeFilter.connect(hissGain);
-        hissGain.connect(masterGain);
-        hissGainRef.current = hissGain;
-        tapeNoise.start(0);
-
-        // 2. Warm Hearth Fireplace Crackle Generator
-        const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
-        const crackleData = crackleBuffer.getChannelData(0);
-        for (let i = 0; i < crackleBuffer.length; i++) {
-          if (Math.random() > 0.998) {
-            crackleData[i] = (Math.random() * 2 - 1) * 0.7;
-          } else {
-            crackleData[i] = (Math.random() * 2 - 1) * 0.005;
-          }
-        }
-
-        const crackleSource = ctx.createBufferSource();
-        crackleSource.buffer = crackleBuffer;
-        crackleSource.loop = true;
-
-        const crackleFilter = ctx.createBiquadFilter();
-        crackleFilter.type = 'lowpass';
-        crackleFilter.frequency.setValueAtTime(3200, ctx.currentTime);
-
-        const crackleGain = ctx.createGain();
-        crackleGain.gain.setValueAtTime(fireCrackle ? 0.06 : 0, ctx.currentTime);
-
-        crackleSource.connect(crackleFilter);
-        crackleFilter.connect(crackleGain);
-        crackleGain.connect(masterGain);
-        crackleGainRef.current = crackleGain;
-        crackleSource.start(0);
-
-      } catch (err) {
-        console.warn('Web Audio init error:', err);
-      }
-    }
-
-    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-  };
-
-  // Play / Pause Track
-  const togglePlay = async () => {
-    initWebAudio();
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      setIsLoading(false);
-    } else {
-      setIsLoading(true);
-      try {
-        if (!audioRef.current.src || audioRef.current.src !== activeTrack.audioUrl) {
-          audioRef.current.src = activeTrack.audioUrl;
-        }
-        audioRef.current.playbackRate = speedMode;
-        audioRef.current.volume = isMuted ? 0 : volume;
-        await audioRef.current.play();
-        setIsPlaying(true);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Playback error:', err);
-        setIsLoading(false);
-        setIsPlaying(false);
-      }
-    }
-  };
-
-  // Play specific track
-  const playTrack = async (track: BollywoodTrack, newIndex?: number) => {
-    initWebAudio();
-    setIsLoading(true);
-    setCurrentTime(0);
-    if (track.durationSeconds) {
-      setDuration(track.durationSeconds);
-    }
-
-    if (newIndex !== undefined) {
-      setCurrentTrackIndex(newIndex);
-    } else {
-      const existingIdx = playlist.findIndex((t) => t.id === track.id || t.audioUrl === track.audioUrl);
-      if (existingIdx !== -1) {
-        setCurrentTrackIndex(existingIdx);
-      } else {
-        const updated = [track, ...playlist];
-        setPlaylist(updated);
-        setCurrentTrackIndex(0);
-      }
-    }
-
-    if (audioRef.current) {
-      audioRef.current.src = track.audioUrl;
-      audioRef.current.playbackRate = speedMode;
-      audioRef.current.volume = isMuted ? 0 : volume;
-      try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Play error on track:', err);
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const nextTrack = () => {
-    const nextIdx = (currentTrackIndex + 1) % playlist.length;
-    playTrack(playlist[nextIdx], nextIdx);
-  };
-
-  const prevTrack = () => {
-    if (currentTime > 4 && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      setCurrentTime(0);
-      return;
-    }
-    const prevIdx = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-    playTrack(playlist[prevIdx], prevIdx);
-  };
-
   const seekRelative = (seconds: number) => {
-    if (!audioRef.current) return;
-    const newTime = Math.max(0, Math.min(duration, audioRef.current.currentTime + seconds));
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
+    seekTo(currentTime + seconds);
   };
 
   const handleSeekChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
-    }
-  };
-
-  const changeSpeedMode = (newSpeed: SpeedMode) => {
-    setSpeedMode(newSpeed);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = newSpeed;
-    }
+    seekTo(parseFloat(e.target.value));
   };
 
   const POPULAR_SEARCH_CHIPS = [
@@ -291,13 +98,8 @@ export default function HearthMusicPlayer() {
     setIsSearching(true);
     setActiveTab('search');
     try {
-      const res = await fetch('/api/music/search?q=' + encodeURIComponent(trimmed));
-      const data = await res.json();
-      if (data.success && data.results) {
-        setSearchResults(data.results);
-      }
-    } catch (err) {
-      console.error('Search API error:', err);
+      const results = await searchSongs(trimmed);
+      setSearchResults(results);
     } finally {
       setIsSearching(false);
     }
@@ -324,7 +126,7 @@ export default function HearthMusicPlayer() {
     if (isNaN(secs) || secs < 0) return '0:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
-    return m + ':' + (s < 10 ? '0' : '') + s;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   // Keyboard shortcut support
@@ -346,77 +148,7 @@ export default function HearthMusicPlayer() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, activeTrack]);
-
-  // Audio element listeners
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onLoadedMetadata = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
-        setDuration(audio.duration);
-      }
-    };
-    const onEnded = () => {
-      if (isLooping) {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        nextTrack();
-      }
-    };
-    const onWaiting = () => setIsLoading(true);
-    const onCanPlay = () => setIsLoading(false);
-
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('waiting', onWaiting);
-    audio.addEventListener('canplay', onCanPlay);
-
-    return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('waiting', onWaiting);
-      audio.removeEventListener('canplay', onCanPlay);
-    };
-  }, [playlist, currentTrackIndex, isLooping, speedMode]);
-
-  // Volume & tape hiss updates
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-    if (masterGainRef.current && audioCtxRef.current) {
-      masterGainRef.current.gain.setValueAtTime(
-        isMuted ? 0 : volume,
-        audioCtxRef.current.currentTime
-      );
-    }
-  }, [volume, isMuted]);
-
-  // Tape Hiss Gain
-  useEffect(() => {
-    if (hissGainRef.current && audioCtxRef.current) {
-      hissGainRef.current.gain.setValueAtTime(
-        tapeHiss && !isMuted && isPlaying ? 0.03 : 0,
-        audioCtxRef.current.currentTime
-      );
-    }
-  }, [tapeHiss, isMuted, isPlaying]);
-
-  // Fireplace Crackle Gain
-  useEffect(() => {
-    if (crackleGainRef.current && audioCtxRef.current) {
-      crackleGainRef.current.gain.setValueAtTime(
-        fireCrackle && !isMuted ? 0.06 : 0,
-        audioCtxRef.current.currentTime
-      );
-    }
-  }, [fireCrackle, isMuted]);
+  }, [isPlaying, activeTrack, togglePlay, currentTime]);
 
   // Dynamic spool fullness calculation
   const progressRatio = duration > 0 ? currentTime / duration : 0;
@@ -432,9 +164,6 @@ export default function HearthMusicPlayer() {
 
   return (
     <div className="w-full max-w-2xl lg:max-w-3xl mx-auto text-left relative select-none">
-      {/* HTML5 Audio Streamer */}
-      <audio ref={audioRef} preload="metadata" />
-
       {/* AMBIENT HEARTH FIREPLACE GLOW AURA */}
       <div
         className={'absolute -inset-2 sm:-inset-4 rounded-2xl transition-all duration-1000 pointer-events-none ' + (
@@ -470,7 +199,7 @@ export default function HearthMusicPlayer() {
             </span>
             <span className="hidden sm:inline-flex items-center space-x-1 px-1.5 py-0.2 text-[8px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 rounded-xs">
               <ShieldCheck className="w-2.5 h-2.5" />
-              <span>LOSSLESS & FREE</span>
+              <span>LOSSLESS AUDIO</span>
             </span>
           </div>
 
@@ -625,7 +354,7 @@ export default function HearthMusicPlayer() {
               <div className="flex items-center space-x-1">
                 <span className="text-[7.5px] font-mono text-[#d4a044]/70 w-2.5">L</span>
                 <div className="flex items-center space-x-0.5 h-2.5">
-                  {[20, 40, 60, 75, 85, 95, 100].map((level, idx) => {
+                  {[20, 40, 60, 75, 85, 95, 100].map((_, idx) => {
                     const isPeak = idx >= 5;
                     return (
                       <motion.div
@@ -649,7 +378,7 @@ export default function HearthMusicPlayer() {
               <div className="flex items-center space-x-1">
                 <span className="text-[7.5px] font-mono text-[#d4a044]/70 w-2.5">R</span>
                 <div className="flex items-center space-x-0.5 h-2.5">
-                  {[25, 45, 65, 80, 90, 95, 100].map((level, idx) => {
+                  {[25, 45, 65, 80, 90, 95, 100].map((_, idx) => {
                     const isPeak = idx >= 5;
                     return (
                       <motion.div
@@ -750,15 +479,15 @@ export default function HearthMusicPlayer() {
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 fill-current" />
+                  <Play className="w-4 h-4 fill-current ml-0.5" />
                   <span className="text-[10px] font-mono tracking-widest font-bold uppercase">
-                    PLAY BOLLYWOOD
+                    PLAY CASSETTE
                   </span>
                 </>
               )}
             </button>
 
-            {/* FAST FORWARD 10s */}
+            {/* FORWARD 10s */}
             <button
               onClick={() => seekRelative(10)}
               className="px-2.5 py-2 bg-[#1b1209] hover:bg-[#281b0e] active:bg-[#0c0804] border border-[#4d3319] text-[#d4a044] hover:text-[#fbf7ee] rounded-xs font-mono text-[9px] transition-all cursor-pointer shadow-sm active:scale-95"
@@ -775,176 +504,151 @@ export default function HearthMusicPlayer() {
             >
               <SkipForward className="w-3.5 h-3.5" />
             </button>
+
+            {/* LOOP TOGGLE */}
+            <button
+              onClick={toggleLoop}
+              className={'p-2 rounded-xs border transition-all cursor-pointer shadow-sm ' + (
+                isLooping
+                  ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#d4a044]'
+                  : 'bg-[#1b1209] border-[#4d3319] text-[#f5f0e8]/50 hover:text-[#f5f0e8]'
+              )}
+              title={isLooping ? 'Auto-Repeat Active' : 'Enable Repeat Track'}
+            >
+              <Repeat className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Secondary Extra Vibe Controls */}
-          <div className="flex items-center space-x-1.5">
-            {/* Vibe Ambience Panel Toggle */}
+          {/* Right Toolbar: Volume, Analog Tone FX & Mixtape Drawer Button */}
+          <div className="flex items-center space-x-2">
+            {/* Master Volume Slider & Mute Toggle */}
+            <div className="flex items-center space-x-1.5 bg-[#0a0502] border border-[#3d2714] px-2 py-1.5 rounded-xs">
+              <button
+                onClick={toggleMute}
+                className="text-[#d4a044] hover:text-[#fbf7ee] transition-colors cursor-pointer"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="w-3.5 h-3.5" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5" />
+                )}
+              </button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                className="w-14 sm:w-20 h-1 bg-[#2b1c10] rounded-lg appearance-none cursor-pointer accent-[#d4a044]"
+                aria-label="Volume slider"
+              />
+            </div>
+
+            {/* Vibe & Tone Controls Toggle */}
             <button
               onClick={() => setShowVibePanel(!showVibePanel)}
-              className={'px-2.5 py-2 rounded-xs border font-mono uppercase tracking-wider text-[8.5px] transition-all cursor-pointer flex items-center space-x-1 ' + (
-                fireCrackle || speedMode !== 1.0 || showVibePanel
-                  ? 'bg-[#d4a044]/25 border-[#d4a044] text-[#d4a044] shadow-sm'
-                  : 'bg-[#1b1209] border-[#3d2714] text-[#f5f0e8]/60 hover:text-[#d4a044]'
+              className={'px-2.5 py-1.5 rounded-xs border text-[9.5px] font-mono tracking-wider uppercase flex items-center space-x-1.5 transition-all cursor-pointer ' + (
+                showVibePanel || tapeHiss || fireCrackle || speedMode !== 1.0
+                  ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#d4a044]'
+                  : 'bg-[#1b1209] border-[#4d3319] text-[#f5f0e8]/80 hover:text-[#fbf7ee]'
               )}
-              title="Extra Vibe Settings (Fireplace, Slowed+Reverb, Tape Hiss)"
             >
-              <Sparkles className="w-3 h-3 text-[#d4a044]" />
-              <span>Vibe FX</span>
+              <Sliders className="w-3 h-3" />
+              <span className="hidden sm:inline">ANALOG VIBE</span>
             </button>
 
-            {/* Loop Toggle */}
-            <button
-              onClick={() => setIsLooping(!isLooping)}
-              className={'p-2 rounded-xs border transition-colors cursor-pointer ' + (
-                isLooping
-                  ? 'bg-[#d4a044]/25 border-[#d4a044] text-[#d4a044]'
-                  : 'bg-[#1b1209] border-[#3d2714] text-[#f5f0e8]/50 hover:text-[#d4a044]'
-              )}
-              title={isLooping ? 'Loop Track: ON' : 'Loop Track: OFF'}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Mixtape Cassette Vault Drawer Toggle */}
+            {/* OPEN MIXTAPE & SEARCH DRAWER BUTTON */}
             <button
               onClick={() => setShowDrawer(!showDrawer)}
-              className={'px-3 py-2 border font-mono uppercase tracking-wider rounded-xs flex items-center space-x-1.5 transition-all cursor-pointer text-[9px] ' + (
+              className={'px-3 py-1.5 rounded-xs border text-[9.5px] font-mono tracking-wider uppercase flex items-center space-x-1.5 transition-all cursor-pointer ' + (
                 showDrawer
-                  ? 'bg-[#d4a044] text-[#0d0804] font-bold border-[#d4a044]'
-                  : 'bg-[#1b1209] hover:bg-[#281b0e] border-[#3d2714] text-[#f5f0e8] hover:border-[#d4a044]'
+                  ? 'bg-[#d4a044] text-[#0d0804] border-[#d4a044] font-bold'
+                  : 'bg-[#2a1a0d] hover:bg-[#3d2714] border-[#59391b] text-[#f5ba50]'
               )}
             >
-              <ListMusic className="w-3.5 h-3.5 text-[#d4a044]" />
-              <span>Mixtapes ({playlist.length})</span>
-            </button>
-
-            {/* Volume Mute Toggle */}
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className="p-2 bg-[#1b1209] hover:bg-[#281b0e] border border-[#3d2714] text-[#f5f0e8]/70 hover:text-[#d4a044] rounded-xs cursor-pointer transition-colors"
-              title={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
+              <ListMusic className="w-3.5 h-3.5" />
+              <span>CASSETTE VAULT</span>
             </button>
           </div>
         </div>
 
-        {/* EXTRA VIBE & AMBIENCE SETTINGS DRAWER */}
+        {/* EXPANDABLE ANALOG TEXTURE & ACOUSTIC MODULATION PANEL */}
         <AnimatePresence>
           {showVibePanel && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-3 pt-3 border-t border-[#3d2714] overflow-hidden"
+              transition={{ duration: 0.3 }}
+              className="mt-3 pt-3 border-t border-[#3d2714]/80 overflow-hidden"
             >
-              <div className="bg-[#080402] border border-[#3d2714] rounded-xs p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5 text-[9px] font-mono uppercase text-[#d4a044] font-bold">
-                    <Sliders className="w-3.5 h-3.5" />
-                    <span>AUDIO VIBE & ATMOSPHERE ENGINE</span>
-                  </div>
+              <div className="bg-[#080402] border border-[#3d2714] p-3 rounded-xs flex flex-wrap items-center justify-between gap-3 text-[10px]">
+                {/* 1. Vintage Magnetic Tape Hiss */}
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setShowVibePanel(false)}
-                    className="text-[#f5f0e8]/40 hover:text-[#f5f0e8] text-xs cursor-pointer"
+                    onClick={() => setTapeHiss((prev) => !prev)}
+                    className={'px-2.5 py-1 rounded-xs border font-mono tracking-wider flex items-center space-x-1.5 transition-all cursor-pointer ' + (
+                      tapeHiss
+                        ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#d4a044]'
+                        : 'bg-[#140c06] border-[#3d2714] text-[#f5f0e8]/40 hover:text-[#f5f0e8]'
+                    )}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <Disc3 className={'w-3 h-3 ' + (tapeHiss && isPlaying ? 'animate-spin' : '')} />
+                    <span>📼 TAPE HISS NOISE: {tapeHiss ? 'ACTIVE (3%)' : 'MUTED'}</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                  {/* 1. Fireplace Crackle Ambience */}
+                {/* 2. Hearth Wood-Fire Crackle Noise */}
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => {
-                      initWebAudio();
-                      setFireCrackle(!fireCrackle);
-                    }}
-                    className={'p-2.5 rounded-xs border text-left flex items-center justify-between transition-all cursor-pointer ' + (
+                    onClick={() => setFireCrackle((prev) => !prev)}
+                    className={'px-2.5 py-1 rounded-xs border font-mono tracking-wider flex items-center space-x-1.5 transition-all cursor-pointer ' + (
                       fireCrackle
-                        ? 'bg-[#ff7700]/15 border-[#ff7700] text-[#ffaa44]'
-                        : 'bg-[#120a05] border-[#332010] text-[#f5f0e8]/60 hover:border-[#d4a044]/50'
+                        ? 'bg-[#ff6a00]/20 border-[#ff6a00] text-[#ff9040]'
+                        : 'bg-[#140c06] border-[#3d2714] text-[#f5f0e8]/40 hover:text-[#f5f0e8]'
                     )}
                   >
-                    <div className="flex items-center space-x-2">
-                      <Flame className={'w-4 h-4 ' + (fireCrackle ? 'text-[#ff7700] animate-bounce' : 'text-[#f5f0e8]/40')} />
-                      <div>
-                        <div className="text-[10px] font-semibold">Fireplace Crackle</div>
-                        <div className="text-[8px] opacity-70">Warm cozy embers ambience</div>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-mono font-bold">
-                      {fireCrackle ? 'ON' : 'OFF'}
-                    </span>
+                    <Flame className={'w-3 h-3 ' + (fireCrackle ? 'animate-pulse text-[#ff9040]' : '')} />
+                    <span>🔥 WOOD FIRE CRACKLE: {fireCrackle ? 'BURNING (6%)' : 'OFF'}</span>
                   </button>
+                </div>
 
-                  {/* 2. Analog Cassette Magnetic Hiss */}
-                  <button
-                    onClick={() => {
-                      initWebAudio();
-                      setTapeHiss(!tapeHiss);
-                    }}
-                    className={'p-2.5 rounded-xs border text-left flex items-center justify-between transition-all cursor-pointer ' + (
-                      tapeHiss
-                        ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#d4a044]'
-                        : 'bg-[#120a05] border-[#332010] text-[#f5f0e8]/60 hover:border-[#d4a044]/50'
-                    )}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Radio className={'w-4 h-4 ' + (tapeHiss ? 'text-[#d4a044]' : 'text-[#f5f0e8]/40')} />
-                      <div>
-                        <div className="text-[10px] font-semibold">Vintage Tape Hiss</div>
-                        <div className="text-[8px] opacity-70">Warm analog magnetic sound</div>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-mono font-bold">
-                      {tapeHiss ? 'ON' : 'OFF'}
-                    </span>
-                  </button>
-
-                  {/* 3. Tempo / Dreamy Slowed Mode */}
-                  <div className="p-2.5 bg-[#120a05] border border-[#332010] rounded-xs flex flex-col justify-between">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-semibold text-[#f5f0e8]/90 flex items-center gap-1">
-                        <Moon className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Tempo & Pitch</span>
-                      </span>
-                      <span className="text-[8px] font-mono text-[#d4a044]">{speedMode}x</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => changeSpeedMode(0.85)}
-                        className={'flex-1 py-1 rounded-xs text-[8px] font-mono uppercase cursor-pointer border ' + (
-                          speedMode === 0.85
-                            ? 'bg-purple-950 border-purple-500 text-purple-200 font-bold'
-                            : 'bg-[#080402] border-[#332010] text-[#f5f0e8]/50'
-                        )}
-                        title="0.85x Slowed + Reverb Vibe"
-                      >
-                        🌙 Slowed
-                      </button>
-                      <button
-                        onClick={() => changeSpeedMode(1.0)}
-                        className={'flex-1 py-1 rounded-xs text-[8px] font-mono uppercase cursor-pointer border ' + (
-                          speedMode === 1.0
-                            ? 'bg-[#d4a044] border-[#d4a044] text-[#0d0804] font-bold'
-                            : 'bg-[#080402] border-[#332010] text-[#f5f0e8]/50'
-                        )}
-                      >
-                        Original
-                      </button>
-                      <button
-                        onClick={() => changeSpeedMode(1.15)}
-                        className={'flex-1 py-1 rounded-xs text-[8px] font-mono uppercase cursor-pointer border ' + (
-                          speedMode === 1.15
-                            ? 'bg-amber-950 border-amber-500 text-amber-200 font-bold'
-                            : 'bg-[#080402] border-[#332010] text-[#f5f0e8]/50'
-                        )}
-                        title="1.15x Cassette Fast-Tuned"
-                      >
-                        ⚡ 1.15x
-                      </button>
-                    </div>
+                {/* 3. Tape Speed Modulation Preset */}
+                <div className="flex items-center space-x-1.5">
+                  <span className="font-mono text-[#d4a044]/70 uppercase">SPEED PRESET:</span>
+                  <div className="flex items-center space-x-1 bg-[#100904] p-0.5 border border-[#3d2714] rounded-xs">
+                    <button
+                      onClick={() => setSpeedMode(0.85)}
+                      className={'px-2 py-0.5 rounded-xs font-mono text-[9px] transition-all cursor-pointer ' + (
+                        speedMode === 0.85
+                          ? 'bg-purple-900/80 border border-purple-500 text-purple-200'
+                          : 'text-[#f5f0e8]/50 hover:text-[#f5f0e8]'
+                      )}
+                    >
+                      🌙 SLOWED (0.85x)
+                    </button>
+                    <button
+                      onClick={() => setSpeedMode(1.0)}
+                      className={'px-2 py-0.5 rounded-xs font-mono text-[9px] transition-all cursor-pointer ' + (
+                        speedMode === 1.0
+                          ? 'bg-[#d4a044] text-[#0d0804] font-bold'
+                          : 'text-[#f5f0e8]/50 hover:text-[#f5f0e8]'
+                      )}
+                    >
+                      ✦ 1.0x STUDIO
+                    </button>
+                    <button
+                      onClick={() => setSpeedMode(1.15)}
+                      className={'px-2 py-0.5 rounded-xs font-mono text-[9px] transition-all cursor-pointer ' + (
+                        speedMode === 1.15
+                          ? 'bg-emerald-900/80 border border-emerald-500 text-emerald-200'
+                          : 'text-[#f5f0e8]/50 hover:text-[#f5f0e8]'
+                      )}
+                    >
+                      ⚡ 1.15x FAST
+                    </button>
                   </div>
                 </div>
               </div>
@@ -952,235 +656,196 @@ export default function HearthMusicPlayer() {
           )}
         </AnimatePresence>
 
-        {/* EXPANDABLE DRAWER: Search Any Bollywood Song & Browse Vibe Mixtapes */}
+        {/* =========================================================================
+            SLIDE-DOWN CASSETTE VAULT & SEARCH DRAWER
+        ========================================================================= */}
         <AnimatePresence>
           {showDrawer && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-3.5 pt-3.5 border-t border-[#3d2714] space-y-2.5 overflow-hidden"
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 pt-4 border-t-2 border-[#4d3319] overflow-hidden"
             >
-              {/* Search Bar & Mode Switcher */}
-              <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
-                {/* Search Input */}
-                <div className="relative w-full sm:flex-1">
-                  <Search className="w-3.5 h-3.5 text-[#d4a044] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      handleSearchChange(e.target.value);
-                      if (e.target.value.trim()) setActiveTab('search');
-                    }}
-                    placeholder="Search any artist, song, movie (e.g., Arijit Singh, Tum Hi Ho, Kesariya)..."
-                    className="w-full bg-[#080402] border border-[#3d2714] focus:border-[#d4a044] rounded-xs py-1.5 pl-8 pr-7 text-xs text-[#f5f0e8] placeholder-[#f5f0e8]/40 outline-none font-sans"
-                  />
-                  {searchQuery && (
+              <div className="bg-[#090502] border border-[#3d2714] rounded-xs p-3.5 sm:p-4">
+                {/* Search Bar & Drawer Header */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-3.5 pb-3 border-b border-[#301e10]">
+                  <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSearchResults([]);
-                        setActiveTab('curated');
-                      }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#f5f0e8]/40 hover:text-[#f5f0e8] cursor-pointer"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Tab Switcher */}
-                <div className="flex items-center space-x-1 w-full sm:w-auto justify-end">
-                  <button
-                    onClick={() => setActiveTab('curated')}
-                    className={'px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider rounded-xs cursor-pointer border ' + (
-                      activeTab === 'curated'
-                        ? 'bg-[#d4a044] text-[#0d0804] font-bold border-[#d4a044]'
-                        : 'bg-[#180f08] text-[#f5f0e8]/60 border-[#3d2714]'
-                    )}
-                  >
-                    Curated Mixtapes
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('search')}
-                    className={'px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider rounded-xs cursor-pointer border ' + (
-                      activeTab === 'search'
-                        ? 'bg-[#d4a044] text-[#0d0804] font-bold border-[#d4a044]'
-                        : 'bg-[#180f08] text-[#f5f0e8]/60 border-[#3d2714]'
-                    )}
-                  >
-                    Search Results ({searchResults.length})
-                  </button>
-                </div>
-              </div>
-
-              {/* Popular Quick-Search Suggestions */}
-              <div className="flex items-center space-x-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                <span className="text-[8px] font-mono uppercase text-[#d4a044]/60 shrink-0 flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5 text-[#d4a044]" />
-                  <span>Popular:</span>
-                </span>
-                {POPULAR_SEARCH_CHIPS.map((chip) => (
-                  <button
-                    key={chip}
-                    onClick={() => {
-                      setSearchQuery(chip);
-                      executeSearch(chip);
-                    }}
-                    className={'px-2 py-0.5 rounded-xs text-[8.5px] font-mono whitespace-nowrap cursor-pointer transition-all border shrink-0 ' + (
-                      searchQuery.toLowerCase() === chip.toLowerCase()
-                        ? 'bg-[#d4a044] text-[#0d0804] font-bold border-[#d4a044]'
-                        : 'bg-[#140c06] text-[#f5f0e8]/70 border-[#3d2714] hover:border-[#d4a044]/60 hover:text-[#f5f0e8]'
-                    )}
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-
-              {/* Vibe Category Pills for Curated Tab */}
-              {activeTab === 'curated' && (
-                <div className="flex flex-wrap gap-1.5 pb-1">
-                  {VIBE_CATEGORIES.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={'px-2 py-0.5 rounded-xs text-[8.5px] font-mono uppercase tracking-wider cursor-pointer transition-colors ' + (
-                        selectedCategory === cat
-                          ? 'bg-[#d4a044]/25 text-[#d4a044] border border-[#d4a044]'
-                          : 'bg-[#080402] text-[#f5f0e8]/50 border border-[#2e1d0f] hover:border-[#d4a044]/40'
+                      onClick={() => setActiveTab('curated')}
+                      className={'px-3 py-1 text-[10px] font-mono tracking-wider uppercase rounded-xs transition-all cursor-pointer ' + (
+                        activeTab === 'curated'
+                          ? 'bg-[#d4a044] text-[#0d0804] font-bold'
+                          : 'bg-[#180f08] text-[#f5f0e8]/60 hover:text-[#fbf7ee] border border-[#3d2714]'
                       )}
                     >
-                      {cat}
+                      ✦ Curated Cassettes ({playlist.length})
                     </button>
-                  ))}
-                </div>
-              )}
 
-              {/* Song List Container */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
-                {activeTab === 'search' ? (
-                  isSearching ? (
-                    <div className="col-span-full py-6 text-center text-xs text-[#d4a044] font-mono flex items-center justify-center space-x-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>SEARCHING HIGH-FIDELITY MUSIC VAULT...</span>
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((track) => (
+                    <button
+                      onClick={() => setActiveTab('search')}
+                      className={'px-3 py-1 text-[10px] font-mono tracking-wider uppercase rounded-xs transition-all cursor-pointer ' + (
+                        activeTab === 'search'
+                          ? 'bg-[#d4a044] text-[#0d0804] font-bold'
+                          : 'bg-[#180f08] text-[#f5f0e8]/60 hover:text-[#fbf7ee] border border-[#3d2714]'
+                      )}
+                    >
+                      🔍 Search Song Library
+                    </button>
+                  </div>
+
+                  {/* Instant Song Search Input */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#d4a044]/60" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search Arijit, KK, Kishore..."
+                      className="w-full bg-[#140c06] border border-[#4d3319] focus:border-[#d4a044] text-[#fbf7ee] placeholder-[#f5f0e8]/30 text-xs pl-8 pr-7 py-1.5 rounded-xs outline-none transition-colors"
+                    />
+                    {searchQuery && (
                       <button
-                        key={track.id}
-                        onClick={() => playTrack(track)}
-                        className={'p-2 rounded-xs border text-left flex items-center justify-between transition-all cursor-pointer group ' + (
-                          activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl
-                            ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#f5f0e8] shadow-sm'
-                            : 'border-[#3d2714] hover:border-[#d4a044] bg-[#080402] hover:bg-[#180f08]'
+                        onClick={() => handleSearchChange('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#d4a044]/60 hover:text-[#fbf7ee]"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Popular Quick-Search Suggestions */}
+                {activeTab === 'search' && (
+                  <div className="mb-3 flex flex-wrap items-center gap-1.5 text-[9px] font-mono">
+                    <span className="text-[#d4a044]/60 mr-1">POPULAR:</span>
+                    {POPULAR_SEARCH_CHIPS.map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => {
+                          setSearchQuery(chip);
+                          executeSearch(chip);
+                        }}
+                        className="px-2 py-0.5 bg-[#140c06] hover:bg-[#28180c] border border-[#3d2714] text-[#d4a044] rounded-xs transition-colors cursor-pointer"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Curated Vibe Categories Tabs */}
+                {activeTab === 'curated' && !searchQuery && (
+                  <div className="mb-3 flex flex-wrap gap-1.5 pb-1 overflow-x-auto">
+                    {VIBE_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={'px-2.5 py-1 text-[9px] font-mono tracking-wider uppercase rounded-xs transition-all whitespace-nowrap cursor-pointer ' + (
+                          selectedCategory === cat
+                            ? 'bg-[#d4a044]/20 border border-[#d4a044] text-[#d4a044] font-semibold'
+                            : 'bg-[#140c06] border border-[#2d1c0f] text-[#f5f0e8]/50 hover:text-[#fbf7ee]'
                         )}
                       >
-                        <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                          {track.imageUrl ? (
-                            <img
-                              src={track.imageUrl}
-                              alt={track.title}
-                              className="w-8 h-8 rounded-xs object-cover border border-[#3d2714] shrink-0"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-xs bg-[#180f08] flex items-center justify-center shrink-0">
-                              <Disc3 className="w-4 h-4 text-[#d4a044]" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold text-[#f5f0e8] truncate group-hover:text-[#d4a044] flex items-center gap-1.5">
-                              <span className="truncate">{track.title}</span>
-                              {(activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl) && isPlaying && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block shrink-0" />
-                              )}
-                            </div>
-                            <div className="text-[9px] text-[#f5f0e8]/50 truncate">
-                              {track.singers} · {track.movie} {track.year ? `(${track.year})` : ''}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-1.5 shrink-0">
-                          {(activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl) && (
-                            <Check className="w-3.5 h-3.5 text-[#d4a044]" />
-                          )}
-                          <span className="text-[8.5px] font-mono text-[#d4a044]">
-                            {track.durationFormatted}
-                          </span>
-                        </div>
+                        {cat}
                       </button>
-                    ))
-                  ) : (
-                    <div className="col-span-full py-6 text-center text-xs text-[#f5f0e8]/50 font-mono">
-                      {searchQuery
-                        ? `No results found for "${searchQuery}". Tap any popular artist chip above or search another track!`
-                        : 'Search any Bollywood song or artist in lossless sound above!'}
+                    ))}
+                  </div>
+                )}
+
+                {/* Cassette Tape Track List */}
+                <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                  {isSearching ? (
+                    <div className="py-8 text-center text-xs font-mono text-[#d4a044] flex items-center justify-center space-x-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Scanning Lossless Indian Audio Archive...</span>
                     </div>
-                  )
-                ) : (
-                  filteredPlaylist.map((track, idx) => (
-                    <button
-                      key={track.id}
-                      onClick={() => playTrack(track, idx)}
-                      className={'p-2 rounded-xs border text-left flex items-center justify-between transition-all cursor-pointer ' + (
-                        currentTrackIndex === idx && activeTrack.id === track.id
-                          ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#f5f0e8] shadow-sm'
-                          : 'bg-[#080402] border-[#3d2714] hover:border-[#d4a044]/50 text-[#f5f0e8]/75'
-                      )}
-                    >
-                      <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                        {track.imageUrl ? (
-                          <img
-                            src={track.imageUrl}
-                            alt={track.title}
-                            className="w-8 h-8 rounded-xs object-cover border border-[#3d2714] shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-xs bg-[#180f08] flex items-center justify-center shrink-0">
-                            <Disc3 className="w-4 h-4 text-[#d4a044]" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="text-xs font-semibold tracking-wide flex items-center gap-1.5">
-                            <span className="text-[#d4a044]">{idx + 1}.</span>
-                            <span className="truncate">{track.title}</span>
-                            {currentTrackIndex === idx && isPlaying && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block shrink-0" />
+                  ) : activeTab === 'search' && searchResults.length === 0 && searchQuery ? (
+                    <div className="py-8 text-center text-xs text-[#f5f0e8]/50 font-mono">
+                      No recordings found for "{searchQuery}". Try searching artist names like Arijit, Sonu Nigam, or Alka Yagnik.
+                    </div>
+                  ) : (
+                    (activeTab === 'search' ? searchResults : filteredPlaylist).map((track, idx) => {
+                      const isCurrent =
+                        activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl;
+                      return (
+                        <div
+                          key={track.id || idx}
+                          onClick={() => playTrack(track)}
+                          className={'p-2 rounded-xs border flex items-center justify-between transition-all cursor-pointer group ' + (
+                            isCurrent
+                              ? 'bg-[#2d1c0e] border-[#d4a044] text-[#fbf7ee] shadow-sm'
+                              : 'bg-[#120b06] border-[#291b0f] hover:border-[#4d3319] hover:bg-[#1c120a] text-[#f5f0e8]/80'
+                          )}
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            {/* Track Index or Playing Indicator */}
+                            <span className="text-[10px] font-mono text-[#d4a044]/60 w-5 text-center shrink-0">
+                              {isCurrent && isPlaying ? (
+                                <Disc3 className="w-3.5 h-3.5 animate-spin text-[#d4a044] mx-auto" />
+                              ) : (
+                                idx + 1
+                              )}
+                            </span>
+
+                            {/* Mini Album Cover */}
+                            {track.imageUrl && (
+                              <img
+                                src={track.imageUrl}
+                                alt={track.title}
+                                className="w-8 h-8 rounded-xs object-cover border border-[#422c16] shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
                             )}
+
+                            {/* Title, Movie & Artists */}
+                            <div className="min-w-0">
+                              <div className="flex items-center space-x-2">
+                                <p className={'text-xs font-medium truncate ' + (isCurrent ? 'text-[#d4a044]' : 'text-[#fbf7ee]')}>
+                                  {track.title}
+                                </p>
+                                {track.year && (
+                                  <span className="text-[8.5px] font-mono text-[#f5f0e8]/40 shrink-0">
+                                    ({track.year})
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-[#f5f0e8]/50 truncate">
+                                {track.movie} · {track.singers}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-[9.5px] text-[#f5f0e8]/55 truncate">
-                            {track.movie} · {track.singers}
+
+                          <div className="flex items-center space-x-3 shrink-0">
+                            {track.category && (
+                              <span className="hidden sm:inline-block px-1.5 py-0.2 text-[8px] font-mono uppercase bg-[#1e130a] text-[#d4a044]/80 border border-[#3d2714] rounded-xs">
+                                {track.category}
+                              </span>
+                            )}
+                            <span className="text-[10px] font-mono text-[#f5f0e8]/40">
+                              {track.durationFormatted || '4:30'}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playTrack(track);
+                              }}
+                              className="p-1 text-[#d4a044] opacity-0 group-hover:opacity-100 hover:text-[#fbf7ee] transition-all"
+                            >
+                              <Play className="w-3 h-3 fill-current" />
+                            </button>
                           </div>
                         </div>
-                      </div>
-                      {currentTrackIndex === idx && activeTrack.id === track.id ? (
-                        <Check className="w-3.5 h-3.5 text-[#d4a044] shrink-0" />
-                      ) : (
-                        <span className="text-[8.5px] text-[#f5f0e8]/40 font-mono shrink-0">
-                          {track.durationFormatted}
-                        </span>
-                      )}
-                    </button>
-                  ))
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
-
-      {/* Downward Anchor for exploring cocktail menu */}
-      <div className="flex items-center justify-center space-x-6 pt-3 text-[10px] uppercase tracking-[0.2em] text-[#f5f0e8]/60">
-        <a
-          href="#cocktails"
-          className="hover:text-[#d4a044] transition-colors flex items-center gap-1.5"
-        >
-          <span>Explore Cocktails & Bites ↓</span>
-        </a>
-      </div>
     </div>
   );
 }

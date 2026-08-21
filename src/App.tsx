@@ -10,6 +10,8 @@ import ScrollToTop from './components/ScrollToTop';
 import ScrollProgressBar from './components/ScrollProgressBar';
 import HostReceptionModal from './components/HostReceptionModal';
 import InfoDrawer from './components/InfoDrawer';
+import GlobalFloatingMusicWidget from './components/GlobalFloatingMusicWidget';
+import { MusicProvider } from './context/MusicContext';
 import HomePage from './pages/HomePage';
 import MenuPage from './pages/MenuPage';
 import BarPage from './pages/BarPage';
@@ -20,56 +22,61 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="relative min-h-screen bg-[#0d0905] text-[#f5f0e8] selection:bg-[#c9973e] selection:text-[#0d0905] overflow-x-hidden font-sans">
-        {/* Scroll To Top on Route Navigation */}
-        <ScrollToTop />
+      <MusicProvider>
+        <div className="relative min-h-screen bg-[#0d0905] text-[#f5f0e8] selection:bg-[#c9973e] selection:text-[#0d0905] overflow-x-hidden font-sans">
+          {/* Scroll To Top on Route Navigation */}
+          <ScrollToTop />
 
-        {/* Viewport Scroll Progress Bar */}
-        <ScrollProgressBar />
+          {/* Viewport Scroll Progress Bar */}
+          <ScrollProgressBar />
 
-        {/* Quick Reference Restaurant Info Drawer */}
-        <InfoDrawer
-          isOpen={isInfoDrawerOpen}
-          onClose={() => setIsInfoDrawerOpen(false)}
-        />
+          {/* Quick Reference Restaurant Info Drawer */}
+          <InfoDrawer
+            isOpen={isInfoDrawerOpen}
+            onClose={() => setIsInfoDrawerOpen(false)}
+          />
 
-        {/* Host Stand QR Reception Check-in Modal */}
-        <HostReceptionModal />
+          {/* Host Stand QR Reception Check-in Modal */}
+          <HostReceptionModal />
 
-        {/* Editorial Preloader Component */}
-        <Preloader onComplete={() => setIsPreloaderComplete(true)} />
+          {/* Persistent Global Floating Music Player Widget */}
+          <GlobalFloatingMusicWidget />
 
-        {/* Custom Precision Cursor */}
-        <CustomCursor />
+          {/* Editorial Preloader Component */}
+          <Preloader onComplete={() => setIsPreloaderComplete(true)} />
 
-        {/* Noise Texture Overlay */}
-        <NoiseOverlay />
+          {/* Custom Precision Cursor */}
+          <CustomCursor />
 
-        {/* Main Application Wrapper */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isPreloaderComplete ? 1 : 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full flex flex-col min-h-screen justify-between"
-        >
-          {/* Universal Sticky Header Navigation */}
-          <Navbar onToggleInfo={() => setIsInfoDrawerOpen(true)} />
+          {/* Noise Texture Overlay */}
+          <NoiseOverlay />
 
-          {/* Multipage Route Views */}
-          <div className="flex-grow">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/menu" element={<MenuPage />} />
-              <Route path="/bar" element={<BarPage />} />
-              {/* Fallback to Home */}
-              <Route path="*" element={<HomePage />} />
-            </Routes>
-          </div>
+          {/* Main Application Wrapper */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isPreloaderComplete ? 1 : 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full flex flex-col min-h-screen justify-between"
+          >
+            {/* Universal Sticky Header Navigation */}
+            <Navbar onToggleInfo={() => setIsInfoDrawerOpen(true)} />
 
-          {/* Universal 4-Column Luxury Footer */}
-          <Footer onOpenInfo={() => setIsInfoDrawerOpen(true)} />
-        </motion.div>
-      </div>
+            {/* Multipage Route Views */}
+            <div className="flex-grow">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/menu" element={<MenuPage />} />
+                <Route path="/bar" element={<BarPage />} />
+                {/* Fallback to Home */}
+                <Route path="*" element={<HomePage />} />
+              </Routes>
+            </div>
+
+            {/* Universal Luxury Footer */}
+            <Footer onOpenInfo={() => setIsInfoDrawerOpen(true)} />
+          </motion.div>
+        </div>
+      </MusicProvider>
     </BrowserRouter>
   );
 }
