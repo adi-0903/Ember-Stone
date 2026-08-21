@@ -18,6 +18,7 @@ import {
 import { MENU_ITEMS, RESTAURANT_INFO } from '../data/restaurantData';
 import { MenuItem } from '../types';
 import GoldUnderlineHeading from '../components/GoldUnderlineHeading';
+import MenuMasonryGallery from '../components/MenuMasonryGallery';
 
 type Category = 'starters' | 'mains' | 'desserts' | 'drinks';
 type DietaryFilter = 'all' | 'veg' | 'non-veg';
@@ -380,6 +381,9 @@ export default function MenuPage() {
             </motion.div>
           </AnimatePresence>
         )}
+
+        {/* Signature Dishes Masonry Image Gallery with Scroll Reveals */}
+        <MenuMasonryGallery />
 
         {/* Global Dual Tasting Menu Banner */}
         <div className="mt-20 p-8 sm:p-12 border border-[#3a2816] bg-[#120c07] rounded-sm relative overflow-hidden grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">

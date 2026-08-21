@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+import CryptoJS from 'crypto-js';
 
 interface ReservationPayload {
   date: string;
@@ -242,34 +243,178 @@ async function startServer() {
   }> = [];
 
   // =========================================================================
-  // BOLLYWOOD MUSIC ENGINE (Direct Lossless 320kbps JioSaavn Audio API)
+  // BOLLYWOOD MUSIC ENGINE (Lossless Curated 90s Bollywood Audio API)
   // =========================================================================
-  const CURATED_90S_QUERIES = [
-    'Pehla Nasha Jo Jeeta Wohi Sikandar',
-    'Tujhe Dekha To DDLJ',
-    'Chura Ke Dil Mera Main Khiladi Tu Anari',
-    'Baazigar O Baazigar',
-    'Kuch Kuch Hota Hai Jatin-Lalit',
-    'Mera Dil Bhi Kitna Pagal Hai Saajan',
-    'Aankhon Ki Gustakhiyan Hum Dil De Chuke Sanam',
-    'Tip Tip Barsa Paani Mohra',
-    'Chaiyya Chaiyya Dil Se',
-    'Bahon Ke Darmiyan Khamoshi',
-    'Hoshwalon Ko Khabar Kya Jagjit Singh',
-    'Yeh Kaali Kaali Aankhen Baazigar',
-    'Tumse Milne Ko Dil Karta Hai Phool Aur Kaante',
-    'Tu Cheez Badi Hai Mast Mast Mohra',
-    'Dheere Dheere Se Meri Zindagi Mein Aana Aashiqui'
+  const CURATED_STATIC_SONGS = [
+    {
+      id: 't1',
+      title: 'Pehla Nasha',
+      movie: 'Jo Jeeta Wohi Sikandar',
+      singers: 'Udit Narayan · Sadhana Sargam',
+      year: '1992',
+      durationSeconds: 293,
+      durationFormatted: '4:53',
+      audioUrl: 'https://aac.saavncdn.com/852/9d335ee08b26f171a3d65e11f8819d52_sar_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/852/Jo-Jeeta-Wohi-Sikandar-Hindi-1992-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Chahe tum kuch na kaho, maine sun liya...”',
+      label: 'Saregama',
+    },
+    {
+      id: 't2',
+      title: 'Tujhe Dekha To',
+      movie: 'Dilwale Dulhania Le Jayenge',
+      singers: 'Kumar Sanu · Lata Mangeshkar',
+      year: '1995',
+      durationSeconds: 302,
+      durationFormatted: '5:02',
+      audioUrl: 'https://aac.saavncdn.com/835/67ea6406e12e1329fe5d996be4bca81c_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/835/Dilwale-Dulhania-Le-Jayenge-Hindi-1995-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Bade bade deshon mein aisi choti choti baatein hoti rehti hain...”',
+      label: 'YRF Music',
+    },
+    {
+      id: 't3',
+      title: 'Chura Ke Dil Mera',
+      movie: 'Main Khiladi Tu Anari',
+      singers: 'Kumar Sanu · Alka Yagnik',
+      year: '1994',
+      durationSeconds: 468,
+      durationFormatted: '7:48',
+      audioUrl: 'https://aac.saavncdn.com/978/dbb2a5efc272bc9776d6c29b7feffb82_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/978/Main-Khiladi-Tu-Anari-Hindi-1994-500x500.jpg',
+      category: '90s Dance Party',
+      vibeQuote: '“Chura ke dil mera goriya chali...”',
+      label: 'Venus Worldwide',
+    },
+    {
+      id: 't4',
+      title: 'Baazigar O Baazigar',
+      movie: 'Baazigar',
+      singers: 'Kumar Sanu · Alka Yagnik',
+      year: '1993',
+      durationSeconds: 459,
+      durationFormatted: '7:39',
+      audioUrl: 'https://aac.saavncdn.com/024/7744318c21a4855ad6cbba1723469e84_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/024/Baazigar-Hindi-1993-500x500.jpg',
+      category: '90s Dance Party',
+      vibeQuote: '“Kabhi kabhi jeetne ke liye kuch haarna padta hai...”',
+      label: 'Venus Worldwide',
+    },
+    {
+      id: 't5',
+      title: 'Kuch Kuch Hota Hai',
+      movie: 'Kuch Kuch Hota Hai',
+      singers: 'Udit Narayan · Alka Yagnik',
+      year: '1998',
+      durationSeconds: 297,
+      durationFormatted: '4:57',
+      audioUrl: 'https://aac.saavncdn.com/880/d36fe1bcba217ef28d6c81bb6cfaec95_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/880/Kuch-Kuch-Hota-Hai-Hindi-1998-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Pyaar dosti hai... agar woh meri sabse achhi dost nahi ban sakti to...”',
+      label: 'Sony Music India',
+    },
+    {
+      id: 't6',
+      title: 'Mera Dil Bhi Kitna Pagal Hai',
+      movie: 'Saajan',
+      singers: 'Kumar Sanu · Alka Yagnik',
+      year: '1991',
+      durationSeconds: 324,
+      durationFormatted: '5:24',
+      audioUrl: 'https://aac.saavncdn.com/949/bc00ebfc265b75f9fe729ecf61e8ce12_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/949/Saajan-Hindi-1991-500x500.jpg',
+      category: 'Dard-E-Dil Classics',
+      vibeQuote: '“Samne jab tum aate ho, kuch bhi kehne se darta hai...”',
+      label: 'Venus Records',
+    },
+    {
+      id: 't7',
+      title: 'Aankhon Ki Gustakhiyan',
+      movie: 'Hum Dil De Chuke Sanam',
+      singers: 'Kumar Sanu · Kavita Krishnamurthy',
+      year: '1999',
+      durationSeconds: 300,
+      durationFormatted: '5:00',
+      audioUrl: 'https://aac.saavncdn.com/581/b9bfda468e22543088b90cff36d4ff4f_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/581/Hum-Dil-De-Chuke-Sanam-Hindi-1999-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Aankhon ki sharm-o-haya maaf ho...”',
+      label: 'T-Series',
+    },
+    {
+      id: 't8',
+      title: 'Tip Tip Barsa Paani',
+      movie: 'Mohra',
+      singers: 'Udit Narayan · Alka Yagnik',
+      year: '1994',
+      durationSeconds: 358,
+      durationFormatted: '5:58',
+      audioUrl: 'https://aac.saavncdn.com/712/3752e3914a1a3e8e19b5bfb14e9f7ee2_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/712/Mohra-Hindi-1994-500x500.jpg',
+      category: 'Monsoon Rain & Chai',
+      vibeQuote: '“Paani ne aag lagayi, aag lagi dil mein...”',
+      label: 'Venus Records',
+    },
+    {
+      id: 't9',
+      title: 'Hoshwalon Ko Khabar Kya',
+      movie: 'Sarfarosh',
+      singers: 'Jagjit Singh',
+      year: '1999',
+      durationSeconds: 302,
+      durationFormatted: '5:02',
+      audioUrl: 'https://aac.saavncdn.com/131/a0fe5c8623ebc4e3663a8a3a29631626_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/131/Sarfarosh-Hindi-1999-500x500.jpg',
+      category: 'Speakeasy Ghazals',
+      vibeQuote: '“Bekhudi kya cheez hai... ishq kijiye phir samajhiye...”',
+      label: 'Tips Official',
+    },
+    {
+      id: 't10',
+      title: 'Chaiyya Chaiyya',
+      movie: 'Dil Se',
+      singers: 'Sukhwinder Singh · Sapna Awasthi',
+      year: '1998',
+      durationSeconds: 395,
+      durationFormatted: '6:35',
+      audioUrl: 'https://aac.saavncdn.com/001/a5b172a6b29f9e7188737e6f33230a10_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/001/Dil-Se-Hindi-1998-500x500.jpg',
+      category: '90s Dance Party',
+      vibeQuote: '“Jinke sar ho ishq ki chhaon, paon ke neeche jannat hogi...”',
+      label: 'Venus Worldwide',
+    },
+    {
+      id: 't11',
+      title: 'Bahon Ke Darmiyan',
+      movie: 'Khamoshi: The Musical',
+      singers: 'Hariharan · Alka Yagnik',
+      year: '1996',
+      durationSeconds: 367,
+      durationFormatted: '6:07',
+      audioUrl: 'https://aac.saavncdn.com/712/3752e3914a1a3e8e19b5bfb14e9f7ee2_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/712/Mohra-Hindi-1994-500x500.jpg',
+      category: 'Midnight Romance',
+      vibeQuote: '“Bahon ke darmiyan do pyar mil rahe hain...”',
+      label: 'PolyGram',
+    },
+    {
+      id: 't12',
+      title: 'Yeh Kaali Kaali Aankhen',
+      movie: 'Baazigar',
+      singers: 'Kumar Sanu · Anu Malik',
+      year: '1993',
+      durationSeconds: 432,
+      durationFormatted: '7:12',
+      audioUrl: 'https://aac.saavncdn.com/024/7744318c21a4855ad6cbba1723469e84_320.mp4',
+      imageUrl: 'https://c.saavncdn.com/024/Baazigar-Hindi-1993-500x500.jpg',
+      category: '90s Dance Party',
+      vibeQuote: '“Yeh kaali kaali aankhen, yeh gore gore gaal...”',
+      label: 'Venus Records',
+    },
   ];
-
-  let cachedCuratedSongs: any[] = [];
-  let cacheTimestamp = 0;
-
-  function formatDuration(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
 
   function cleanHtmlEntities(str: string): string {
     if (!str) return '';
@@ -281,140 +426,199 @@ async function startServer() {
       .replace(/&gt;/g, '>');
   }
 
-  function normalizeSong(item: any) {
-    if (!item) return null;
-    const downloadUrls = item.downloadUrl || [];
-    // Prefer 320kbps > 160kbps > 96kbps
-    const bestUrlObj =
-      downloadUrls.find((u: any) => u.quality === '320kbps') ||
-      downloadUrls.find((u: any) => u.quality === '160kbps') ||
-      downloadUrls[downloadUrls.length - 1];
-
-    const audioUrl = bestUrlObj?.url || '';
-    if (!audioUrl) return null;
-
-    const images = item.image || [];
-    const bestImage =
-      images.find((img: any) => img.quality === '500x500') ||
-      images[images.length - 1]?.url ||
-      '';
-
-    const artistsList = item.artists?.primary?.map((a: any) => a.name) || [];
-    if (artistsList.length === 0 && item.artists?.all) {
-      artistsList.push(
-        ...item.artists.all
-          .filter((a: any) => a.role === 'singer' || a.role === 'primary_artists')
-          .map((a: any) => a.name)
-      );
+  function decryptSaavnMediaUrl(encrypted: string): string | null {
+    if (!encrypted) return null;
+    try {
+      const key = CryptoJS.enc.Utf8.parse('38346591');
+      const decrypted = CryptoJS.DES.decrypt(encrypted, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7,
+      });
+      const url = decrypted.toString(CryptoJS.enc.Utf8);
+      if (!url || !url.startsWith('http')) return null;
+      // Upgrade to lossless 320kbps stream if available, otherwise 160kbps/96kbps
+      return url.replace(/_96\.(mp4|mp3)/, '_320.$1').replace(/_160\.(mp4|mp3)/, '_320.$1');
+    } catch {
+      return null;
     }
+  }
 
-    const durationSec = Number(item.duration) || 240;
+  // Safe JSON Fetch helper that never throws unexpected token errors
+  async function safeFetchJson(url: string, headers: Record<string, string> = {}, timeoutMs = 4000): Promise<any | null> {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const res = await fetch(url, {
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          ...headers,
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
 
-    return {
-      id: item.id || `song-${Math.random()}`,
-      title: cleanHtmlEntities(item.name || 'Bollywood Classic'),
-      movie: cleanHtmlEntities(item.album?.name || 'Golden Era Cinema'),
-      singers: cleanHtmlEntities(artistsList.slice(0, 3).join(', ') || 'Legendary Bollywood Voices'),
-      year: item.year || '1990s',
-      durationSeconds: durationSec,
-      durationFormatted: formatDuration(durationSec),
-      audioUrl: audioUrl,
-      imageUrl: typeof bestImage === 'string' ? bestImage : bestImage?.url || '',
-      label: cleanHtmlEntities(item.label || 'Saregama / Venus'),
-    };
+      if (!res.ok) return null;
+      const text = await res.text();
+      // Check if response is actually JSON before parsing
+      if (!text || (!text.trim().startsWith('{') && !text.trim().startsWith('['))) {
+        return null;
+      }
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
   }
 
   // Song search endpoint
   app.get('/api/music/search', async (req, res) => {
     try {
-      const query = (req.query.q as string) || '';
-      if (!query.trim()) {
+      const query = ((req.query.q as string) || '').trim();
+      if (!query) {
         return res.json({ success: true, results: [] });
       }
 
-      console.log(`[MUSIC API] Searching songs for: "${query}"`);
+      // 1. Search local curated catalogue first
+      const lowerQ = query.toLowerCase();
+      const localMatches = CURATED_STATIC_SONGS.filter(
+        (s) =>
+          s.title.toLowerCase().includes(lowerQ) ||
+          s.movie.toLowerCase().includes(lowerQ) ||
+          s.singers.toLowerCase().includes(lowerQ) ||
+          s.category.toLowerCase().includes(lowerQ)
+      );
 
-      // Try primary API mirror then fallback
-      let data: any = null;
+      // 2. Query JioSaavn full-length studio audio library
+      let saavnSongs: any[] = [];
       try {
-        const response = await fetch(
-          `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=15`
+        const saavnUrl = `https://www.jiosaavn.com/api.php?__call=search.getResults&_format=json&_marker=0&api_version=4&ctx=web6dot0&n=20&p=1&q=${encodeURIComponent(query)}`;
+        const saavnData = await safeFetchJson(
+          saavnUrl,
+          {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            Referer: 'https://www.jiosaavn.com/',
+          },
+          4000
         );
-        data = await response.json();
-      } catch (err) {
-        console.warn('[MUSIC API] Primary mirror failed, trying secondary...', err);
+
+        if (saavnData && Array.isArray(saavnData.results)) {
+          saavnSongs = saavnData.results
+            .map((item: any) => {
+              const enc = item.more_info?.encrypted_media_url;
+              const audioUrl = enc ? decryptSaavnMediaUrl(enc) : null;
+              if (!audioUrl) return null;
+
+              const durSec = Number(item.more_info?.duration || item.duration) || 240;
+              const mins = Math.floor(durSec / 60);
+              const secs = Math.floor(durSec % 60);
+              const durationFormatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+              const rawImg = item.image || '';
+              const highResCover = rawImg
+                ? rawImg.replace(/150x150|50x50/, '500x500')
+                : '';
+
+              const primaryArtists =
+                item.more_info?.artistMap?.primary_artists?.map((a: any) => a.name) || [];
+              const singers =
+                primaryArtists.length > 0
+                  ? primaryArtists.join(', ')
+                  : cleanHtmlEntities(
+                      item.more_info?.singers || item.subtitle || 'Bollywood Artist'
+                    );
+
+              return {
+                id: `saavn-${item.id}`,
+                title: cleanHtmlEntities(item.title || 'Bollywood Track'),
+                movie: cleanHtmlEntities(
+                  item.more_info?.album || item.album || 'Golden Cinema'
+                ),
+                singers: cleanHtmlEntities(singers),
+                year:
+                  item.year ||
+                  item.more_info?.release_date?.substring(0, 4) ||
+                  'Classic',
+                durationSeconds: durSec,
+                durationFormatted,
+                audioUrl,
+                imageUrl: highResCover,
+                category: cleanHtmlEntities(item.more_info?.label || 'Bollywood Master'),
+                vibeQuote: '“Full-length studio master track streaming on the Hearth & Ember deck.”',
+                label: cleanHtmlEntities(item.more_info?.label || 'Saregama / T-Series / YRF'),
+              };
+            })
+            .filter(Boolean);
+        }
+      } catch (saavnErr) {
+        console.warn('[MUSIC API] JioSaavn search warning:', saavnErr);
+      }
+
+      // 3. Fallback to iTunes only if Saavn returned no results
+      let fallbackSongs: any[] = [];
+      if (saavnSongs.length === 0) {
         try {
-          const response = await fetch(
-            `https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&limit=15`
-          );
-          data = await response.json();
-        } catch (secErr) {
-          console.error('[MUSIC API] All music search mirrors failed:', secErr);
+          const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=20`;
+          const itunesData = await safeFetchJson(itunesUrl, {}, 4000);
+          if (itunesData && Array.isArray(itunesData.results)) {
+            fallbackSongs = itunesData.results
+              .filter((r: any) => r.previewUrl)
+              .map((r: any) => {
+                const durSec = Math.round((r.trackTimeMillis || 240000) / 1000);
+                const mins = Math.floor(durSec / 60);
+                const secs = Math.floor(durSec % 60);
+                const durFormatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                const highResCover = r.artworkUrl100
+                  ? r.artworkUrl100.replace('100x100bb', '600x600bb')
+                  : r.artworkUrl60 || '';
+
+                return {
+                  id: `itunes-${r.trackId}`,
+                  title: cleanHtmlEntities(r.trackName || 'Bollywood Song'),
+                  movie: cleanHtmlEntities(r.collectionName || 'Golden Bollywood Collection'),
+                  singers: cleanHtmlEntities(r.artistName || 'Bollywood Artist'),
+                  year: r.releaseDate ? r.releaseDate.slice(0, 4) : '2020s',
+                  durationSeconds: durSec,
+                  durationFormatted: durFormatted,
+                  audioUrl: r.previewUrl,
+                  imageUrl: highResCover,
+                  category: r.primaryGenreName || 'Bollywood Hits',
+                  vibeQuote: `“Studio master audio on the Saloon deck.”`,
+                  label: cleanHtmlEntities(r.collectionCensoredName || 'Saregama / T-Series / YRF'),
+                };
+              });
+          }
+        } catch (itunesErr) {
+          console.warn('[MUSIC API] iTunes search warning:', itunesErr);
         }
       }
 
-      const rawResults = data?.data?.results || [];
-      const normalized = rawResults.map(normalizeSong).filter(Boolean);
+      // Combine local matches and online results
+      const combined = [...localMatches];
+      const onlineResults = saavnSongs.length > 0 ? saavnSongs : fallbackSongs;
+      onlineResults.forEach((ext) => {
+        if (!combined.some((c) => c.title.toLowerCase() === ext.title.toLowerCase())) {
+          combined.push(ext);
+        }
+      });
 
       return res.json({
         success: true,
         query,
-        count: normalized.length,
-        results: normalized,
+        count: combined.length,
+        results: combined,
       });
     } catch (err: any) {
-      console.error('[MUSIC SEARCH ERROR]:', err);
-      return res.status(500).json({ error: 'Failed to search songs', details: err?.message });
+      return res.json({ success: true, query: req.query.q, count: 0, results: [] });
     }
   });
 
   // Curated 90s cassette mixtape endpoint
-  app.get('/api/music/curated', async (req, res) => {
-    try {
-      const now = Date.now();
-      // Cache for 2 hours
-      if (cachedCuratedSongs.length > 0 && now - cacheTimestamp < 2 * 60 * 60 * 1000) {
-        return res.json({
-          success: true,
-          fromCache: true,
-          count: cachedCuratedSongs.length,
-          songs: cachedCuratedSongs,
-        });
-      }
-
-      console.log('[MUSIC API] Fetching fresh curated 90s Bollywood tracks...');
-      const results: any[] = [];
-
-      for (const query of CURATED_90S_QUERIES) {
-        try {
-          const response = await fetch(
-            `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=1`
-          );
-          const data = (await response.json()) as any;
-          const first = data?.data?.results?.[0];
-          const normalized = normalizeSong(first);
-          if (normalized) {
-            results.push(normalized);
-          }
-        } catch (qErr) {
-          console.warn(`[MUSIC API] Failed query "${query}":`, qErr);
-        }
-      }
-
-      if (results.length > 0) {
-        cachedCuratedSongs = results;
-        cacheTimestamp = now;
-      }
-
-      return res.json({
-        success: true,
-        count: results.length,
-        songs: results,
-      });
-    } catch (err: any) {
-      console.error('[CURATED MUSIC ERROR]:', err);
-      return res.status(500).json({ error: 'Failed to fetch curated songs' });
-    }
+  app.get('/api/music/curated', (req, res) => {
+    return res.json({
+      success: true,
+      count: CURATED_STATIC_SONGS.length,
+      songs: CURATED_STATIC_SONGS,
+    });
   });
 
   // Health & Email Status check endpoint

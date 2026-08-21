@@ -199,6 +199,10 @@ export default function HearthMusicPlayer() {
   const playTrack = async (track: BollywoodTrack, newIndex?: number) => {
     initWebAudio();
     setIsLoading(true);
+    setCurrentTime(0);
+    if (track.durationSeconds) {
+      setDuration(track.durationSeconds);
+    }
 
     if (newIndex !== undefined) {
       setCurrentTrackIndex(newIndex);
@@ -265,6 +269,40 @@ export default function HearthMusicPlayer() {
     }
   };
 
+  const POPULAR_SEARCH_CHIPS = [
+    'Arijit Singh',
+    'Tum Hi Ho',
+    'Kesariya',
+    'Atif Aslam',
+    'Shreya Ghoshal',
+    'Diljit Dosanjh',
+    'Channa Mereya',
+    'Mohit Chauhan',
+  ];
+
+  // Direct instant search trigger
+  const executeSearch = async (queryText: string) => {
+    const trimmed = queryText.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    setActiveTab('search');
+    try {
+      const res = await fetch('/api/music/search?q=' + encodeURIComponent(trimmed));
+      const data = await res.json();
+      if (data.success && data.results) {
+        setSearchResults(data.results);
+      }
+    } catch (err) {
+      console.error('Search API error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   // Search handler with debounce
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
@@ -278,18 +316,8 @@ export default function HearthMusicPlayer() {
 
     setIsSearching(true);
     searchTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        const res = await fetch('/api/music/search?q=' + encodeURIComponent(val));
-        const data = await res.json();
-        if (data.success && data.results) {
-          setSearchResults(data.results);
-        }
-      } catch (err) {
-        console.error('Search API error:', err);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 400);
+      executeSearch(val);
+    }, 250);
   };
 
   const formatTime = (secs: number) => {
@@ -945,7 +973,7 @@ export default function HearthMusicPlayer() {
                       handleSearchChange(e.target.value);
                       if (e.target.value.trim()) setActiveTab('search');
                     }}
-                    placeholder="Search any Bollywood song, movie, singer (e.g., Aashiqui, DDLJ, Mohra, Sanam Re)..."
+                    placeholder="Search any artist, song, movie (e.g., Arijit Singh, Tum Hi Ho, Kesariya)..."
                     className="w-full bg-[#080402] border border-[#3d2714] focus:border-[#d4a044] rounded-xs py-1.5 pl-8 pr-7 text-xs text-[#f5f0e8] placeholder-[#f5f0e8]/40 outline-none font-sans"
                   />
                   {searchQuery && (
@@ -987,6 +1015,30 @@ export default function HearthMusicPlayer() {
                 </div>
               </div>
 
+              {/* Popular Quick-Search Suggestions */}
+              <div className="flex items-center space-x-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                <span className="text-[8px] font-mono uppercase text-[#d4a044]/60 shrink-0 flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5 text-[#d4a044]" />
+                  <span>Popular:</span>
+                </span>
+                {POPULAR_SEARCH_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => {
+                      setSearchQuery(chip);
+                      executeSearch(chip);
+                    }}
+                    className={'px-2 py-0.5 rounded-xs text-[8.5px] font-mono whitespace-nowrap cursor-pointer transition-all border shrink-0 ' + (
+                      searchQuery.toLowerCase() === chip.toLowerCase()
+                        ? 'bg-[#d4a044] text-[#0d0804] font-bold border-[#d4a044]'
+                        : 'bg-[#140c06] text-[#f5f0e8]/70 border-[#3d2714] hover:border-[#d4a044]/60 hover:text-[#f5f0e8]'
+                    )}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
               {/* Vibe Category Pills for Curated Tab */}
               {activeTab === 'curated' && (
                 <div className="flex flex-wrap gap-1.5 pb-1">
@@ -1012,14 +1064,18 @@ export default function HearthMusicPlayer() {
                   isSearching ? (
                     <div className="col-span-full py-6 text-center text-xs text-[#d4a044] font-mono flex items-center justify-center space-x-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>SEARCHING BOLLYWOOD LOSSLESS VAULT...</span>
+                      <span>SEARCHING HIGH-FIDELITY MUSIC VAULT...</span>
                     </div>
                   ) : searchResults.length > 0 ? (
                     searchResults.map((track) => (
                       <button
                         key={track.id}
                         onClick={() => playTrack(track)}
-                        className="p-2 rounded-xs border border-[#3d2714] hover:border-[#d4a044] bg-[#080402] hover:bg-[#180f08] text-left flex items-center justify-between transition-all cursor-pointer group"
+                        className={'p-2 rounded-xs border text-left flex items-center justify-between transition-all cursor-pointer group ' + (
+                          activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl
+                            ? 'bg-[#d4a044]/20 border-[#d4a044] text-[#f5f0e8] shadow-sm'
+                            : 'border-[#3d2714] hover:border-[#d4a044] bg-[#080402] hover:bg-[#180f08]'
+                        )}
                       >
                         <div className="flex items-center space-x-2.5 min-w-0 pr-2">
                           {track.imageUrl ? (
@@ -1035,24 +1091,32 @@ export default function HearthMusicPlayer() {
                             </div>
                           )}
                           <div className="min-w-0">
-                            <div className="text-xs font-semibold text-[#f5f0e8] truncate group-hover:text-[#d4a044]">
-                              {track.title}
+                            <div className="text-xs font-semibold text-[#f5f0e8] truncate group-hover:text-[#d4a044] flex items-center gap-1.5">
+                              <span className="truncate">{track.title}</span>
+                              {(activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl) && isPlaying && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block shrink-0" />
+                              )}
                             </div>
                             <div className="text-[9px] text-[#f5f0e8]/50 truncate">
-                              {track.singers} · {track.movie}
+                              {track.singers} · {track.movie} {track.year ? `(${track.year})` : ''}
                             </div>
                           </div>
                         </div>
-                        <span className="text-[8.5px] font-mono text-[#d4a044] shrink-0">
-                          {track.durationFormatted}
-                        </span>
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          {(activeTrack.id === track.id || activeTrack.audioUrl === track.audioUrl) && (
+                            <Check className="w-3.5 h-3.5 text-[#d4a044]" />
+                          )}
+                          <span className="text-[8.5px] font-mono text-[#d4a044]">
+                            {track.durationFormatted}
+                          </span>
+                        </div>
                       </button>
                     ))
                   ) : (
                     <div className="col-span-full py-6 text-center text-xs text-[#f5f0e8]/50 font-mono">
                       {searchQuery
-                        ? 'No tracks found. Try searching another movie name, artist, or song!'
-                        : 'Search any Bollywood song in lossless 320kbps above!'}
+                        ? `No results found for "${searchQuery}". Tap any popular artist chip above or search another track!`
+                        : 'Search any Bollywood song or artist in lossless sound above!'}
                     </div>
                   )
                 ) : (

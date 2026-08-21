@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu as MenuIcon, X, Phone, Clock, MapPin, ChevronDown, Sparkles } from 'lucide-react';
+import { Menu as MenuIcon, X, Phone, Clock, MapPin, ChevronDown, Info } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { RESTAURANT_INFO } from '../data/restaurantData';
 
 interface NavbarProps {
   onReserveClick?: () => void;
+  onToggleInfo?: () => void;
 }
 
-export default function Navbar({ onReserveClick }: NavbarProps) {
+export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
@@ -126,7 +127,7 @@ export default function Navbar({ onReserveClick }: NavbarProps) {
           </Link>
 
           {/* Desktop Nav Links - Clean, Spacious, Single-Line */}
-          <nav className="hidden lg:flex items-center space-x-7 xl:space-x-9" aria-label="Main Navigation">
+          <nav className="hidden lg:flex items-center space-x-7 xl:space-x-8" aria-label="Main Navigation">
             {primaryLinks.map((link) => {
               const isCurrentPage = link.isRoute && location.pathname === link.href;
 
@@ -195,11 +196,24 @@ export default function Navbar({ onReserveClick }: NavbarProps) {
             </div>
           </nav>
 
-          {/* Right Action */}
-          <div className="hidden sm:flex items-center space-x-5">
+          {/* Right Action: Quick Info Toggle + Direct Reservation CTA */}
+          <div className="hidden sm:flex items-center space-x-3.5 md:space-x-4">
+            {/* Quick Info Drawer Toggle Button */}
+            {onToggleInfo && (
+              <button
+                id="navbar-info-toggle-btn"
+                onClick={onToggleInfo}
+                className="group flex items-center gap-1.5 px-3 py-2 rounded-xs border border-[#3a2816] hover:border-[#c9973e]/80 bg-[#140e08]/90 hover:bg-[#1f140b] text-[#f5f0e8]/85 hover:text-[#c9973e] transition-all text-[11px] font-mono tracking-wider uppercase cursor-pointer"
+                title="Quick Info: Address, Hours & Contact"
+              >
+                <Info className="w-3.5 h-3.5 text-[#c9973e] group-hover:scale-110 transition-transform" />
+                <span className="hidden xl:inline">Info</span>
+              </button>
+            )}
+
             <a
               href="tel:+13125550182"
-              className="hidden xl:flex items-center space-x-2 text-[11px] tracking-[0.1em] text-[#f5f0e8]/70 hover:text-[#c9973e] transition-colors whitespace-nowrap"
+              className="hidden 2xl:flex items-center space-x-2 text-[11px] tracking-[0.1em] text-[#f5f0e8]/70 hover:text-[#c9973e] transition-colors whitespace-nowrap"
             >
               <Phone className="w-3.5 h-3.5 text-[#c9973e]" />
               <span>312.555.0182</span>
@@ -208,21 +222,34 @@ export default function Navbar({ onReserveClick }: NavbarProps) {
             <button
               id="nav-reserve-btn"
               onClick={handleReserveDirect}
-              className="px-6 py-2.5 bg-[#c9973e] hover:bg-[#d8a84e] text-[#0d0905] text-[11px] tracking-[0.2em] uppercase font-semibold transition-all duration-300 rounded-xs shadow-md shadow-[#c9973e]/20 hover:shadow-[#c9973e]/30 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+              className="px-5 sm:px-6 py-2.5 bg-[#c9973e] hover:bg-[#d8a84e] text-[#0d0905] text-[11px] tracking-[0.2em] uppercase font-semibold transition-all duration-300 rounded-xs shadow-md shadow-[#c9973e]/20 hover:shadow-[#c9973e]/30 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
             >
               Reserve Table
             </button>
           </div>
 
-          {/* Mobile Menu Trigger Button */}
-          <button
-            id="mobile-menu-trigger"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-[#f5f0e8] hover:text-[#c9973e] transition-colors focus:outline-none cursor-pointer"
-            aria-label="Toggle mobile menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6 text-[#c9973e]" /> : <MenuIcon className="w-6 h-6" />}
-          </button>
+          {/* Mobile Menu & Quick Info Trigger Buttons */}
+          <div className="flex items-center gap-2 lg:hidden">
+            {onToggleInfo && (
+              <button
+                id="mobile-info-toggle-btn"
+                onClick={onToggleInfo}
+                className="p-2 rounded-xs border border-[#3a2816] bg-[#140e08] text-[#c9973e] hover:text-[#d4a044] transition-colors cursor-pointer"
+                aria-label="Restaurant Info"
+              >
+                <Info className="w-4.5 h-4.5" />
+              </button>
+            )}
+
+            <button
+              id="mobile-menu-trigger"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-[#f5f0e8] hover:text-[#c9973e] transition-colors focus:outline-none cursor-pointer"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6 text-[#c9973e]" /> : <MenuIcon className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -263,12 +290,29 @@ export default function Navbar({ onReserveClick }: NavbarProps) {
             </div>
 
             <div className="space-y-5 pt-6 border-t border-[#3a2816]">
-              <button
-                onClick={handleReserveDirect}
-                className="w-full py-3.5 bg-[#c9973e] text-[#0d0905] text-xs uppercase tracking-[0.2em] font-semibold rounded-xs text-center shadow-lg shadow-[#c9973e]/20 cursor-pointer"
-              >
-                Reserve a Table
-              </button>
+              {/* Quick Info & Reserve CTA */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {onToggleInfo && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onToggleInfo();
+                    }}
+                    className="py-3 bg-[#160f09] border border-[#c9973e]/50 text-[#c9973e] text-[11px] uppercase tracking-[0.15em] font-medium rounded-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                    <span>Quick Info</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleReserveDirect}
+                  className={`py-3 bg-[#c9973e] text-[#0d0905] text-[11px] uppercase tracking-[0.15em] font-semibold rounded-xs text-center shadow-lg shadow-[#c9973e]/20 cursor-pointer ${
+                    !onToggleInfo ? 'col-span-2' : ''
+                  }`}
+                >
+                  Reserve Table
+                </button>
+              </div>
 
               <div className="grid grid-cols-2 gap-3 text-[11px] text-[#f5f0e8]/65">
                 <div className="flex items-start space-x-2">

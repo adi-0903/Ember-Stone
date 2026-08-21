@@ -9,12 +9,14 @@ import Preloader from './components/Preloader';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollProgressBar from './components/ScrollProgressBar';
 import HostReceptionModal from './components/HostReceptionModal';
+import InfoDrawer from './components/InfoDrawer';
 import HomePage from './pages/HomePage';
 import MenuPage from './pages/MenuPage';
 import BarPage from './pages/BarPage';
 
 export default function App() {
   const [isPreloaderComplete, setIsPreloaderComplete] = useState(false);
+  const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
 
   return (
     <BrowserRouter>
@@ -24,6 +26,12 @@ export default function App() {
 
         {/* Viewport Scroll Progress Bar */}
         <ScrollProgressBar />
+
+        {/* Quick Reference Restaurant Info Drawer */}
+        <InfoDrawer
+          isOpen={isInfoDrawerOpen}
+          onClose={() => setIsInfoDrawerOpen(false)}
+        />
 
         {/* Host Stand QR Reception Check-in Modal */}
         <HostReceptionModal />
@@ -45,7 +53,7 @@ export default function App() {
           className="w-full flex flex-col min-h-screen justify-between"
         >
           {/* Universal Sticky Header Navigation */}
-          <Navbar />
+          <Navbar onToggleInfo={() => setIsInfoDrawerOpen(true)} />
 
           {/* Multipage Route Views */}
           <div className="flex-grow">
@@ -59,7 +67,7 @@ export default function App() {
           </div>
 
           {/* Universal 4-Column Luxury Footer */}
-          <Footer />
+          <Footer onOpenInfo={() => setIsInfoDrawerOpen(true)} />
         </motion.div>
       </div>
     </BrowserRouter>
