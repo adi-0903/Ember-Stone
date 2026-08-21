@@ -22,7 +22,6 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { useMusicContext, SpeedMode } from '../context/MusicContext';
 import { VIBE_CATEGORIES } from '../data/bollywoodTracks';
-import BrandLogo from './BrandLogo';
 
 export default function GlobalFloatingMusicWidget() {
   const {
@@ -119,9 +118,9 @@ export default function GlobalFloatingMusicWidget() {
           >
             {/* Header */}
             <div className="p-3 bg-gradient-to-r from-[#180f08] via-[#120a05] to-[#180f08] border-b border-[#3a2816] flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-full bg-black/80 border border-[#c9973e]/50 flex items-center justify-center shadow-md shadow-black">
-                  <BrandLogo size={16} variant="crimson" showGlow={true} idPrefix="widget-hdr-logo" />
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-[#c9973e]/20 border border-[#c9973e]/50 flex items-center justify-center text-[#c9973e]">
+                  <Flame className="w-3 h-3 text-[#d4a044] animate-pulse" />
                 </div>
                 <div>
                   <h4 className="text-[11px] font-medium tracking-widest uppercase text-[#f5f0e8] font-mono leading-tight">

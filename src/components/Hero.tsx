@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { RESTAURANT_INFO } from '../data/restaurantData';
-import BrandLogo from './BrandLogo';
 
 interface HeroProps {
   onReserveClick: () => void;
@@ -89,16 +88,13 @@ export default function Hero({ onReserveClick, onViewMenuClick }: HeroProps) {
           style={{ y: headlineY, opacity: headlineOpacity }}
           className="max-w-3xl"
         >
-          {/* Eyebrow with reveal animation & Brand Emblem */}
+          {/* Eyebrow with reveal animation */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={isContentInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
             className="flex items-center space-x-3 mb-4"
           >
-            <div className="flex items-center justify-center p-1 rounded-full bg-black/60 border border-[#c9973e]/40 shadow-md shadow-black">
-              <BrandLogo size={22} variant="crimson" showGlow={true} idPrefix="hero-eyebrow-logo" />
-            </div>
             <motion.span
               initial={{ width: 0 }}
               animate={isContentInView ? { width: 32 } : { width: 0 }}

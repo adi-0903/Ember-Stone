@@ -1,7 +1,6 @@
 import { MapPin, Phone, Instagram, Facebook, ArrowUp, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RESTAURANT_INFO } from '../data/restaurantData';
-import BrandLogo from './BrandLogo';
 
 interface FooterProps {
   onOpenInfo?: () => void;
@@ -26,21 +25,16 @@ export default function Footer({ onOpenInfo }: FooterProps) {
         {/* Compact Main Row */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pb-6 border-b border-[#22170d]">
           {/* Brand Wordmark & Location */}
-          <div className="flex items-center gap-3.5 text-center sm:text-left">
-            <div className="p-1 rounded-full bg-[#120c07] border border-[#c9973e]/30 shadow-md shadow-black">
-              <BrandLogo size={26} variant="crimson" showGlow={true} idPrefix="footer-logo" />
-            </div>
-            <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-1.5 sm:gap-4">
-              <h3
-                className="text-xl sm:text-2xl tracking-[0.2em] font-semibold text-[#f5f0e8]"
-                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              >
-                EMBER & STONE
-              </h3>
-              <span className="text-[10px] tracking-[0.25em] uppercase text-[#c9973e] font-mono">
-                Chicago • West Loop
-              </span>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-2 sm:gap-4 text-center sm:text-left">
+            <h3
+              className="text-xl sm:text-2xl tracking-[0.2em] font-semibold text-[#f5f0e8]"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              EMBER & STONE
+            </h3>
+            <span className="text-[10px] tracking-[0.25em] uppercase text-[#c9973e] font-mono">
+              Chicago • West Loop
+            </span>
           </div>
 
           {/* Inline Navigation Links */}
