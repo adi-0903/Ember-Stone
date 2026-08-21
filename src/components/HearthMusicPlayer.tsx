@@ -26,6 +26,7 @@ import {
 import { BollywoodTrack } from '../types';
 import { VIBE_CATEGORIES } from '../data/bollywoodTracks';
 import { useMusicContext, SpeedMode } from '../context/MusicContext';
+import BrandLogo from './BrandLogo';
 
 export default function HearthMusicPlayer() {
   const {
@@ -192,8 +193,10 @@ export default function HearthMusicPlayer() {
 
         {/* Top Deck Header: Brushed Gold Label, Vibe Badges & LED Counter */}
         <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#3d2714]/80">
-          <div className="flex items-center space-x-2">
-            <Radio className="w-3.5 h-3.5 text-[#d4a044] animate-pulse" />
+          <div className="flex items-center space-x-2.5">
+            <div className="w-6 h-6 rounded-full bg-black/80 border border-[#d4a044]/50 flex items-center justify-center shadow-md">
+              <BrandLogo size={16} variant="crimson" showGlow={true} idPrefix="deck-hdr-logo" />
+            </div>
             <span className="text-[10px] tracking-[0.25em] uppercase text-[#d4a044] font-mono font-bold">
               SALOON CASSETTE DECK · 320KBPS BOLLYWOOD
             </span>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Menu as MenuIcon, X, Phone, Clock, MapPin, ChevronDown, Info } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { RESTAURANT_INFO } from '../data/restaurantData';
+import BrandLogo from './BrandLogo';
 
 interface NavbarProps {
   onReserveClick?: () => void;
@@ -110,20 +111,32 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
         }`}
       >
         <div className="max-w-7xl mx-auto h-full px-6 sm:px-10 md:px-12 flex items-center justify-between">
-          {/* Brand Wordmark (clicking goes Home) */}
+          {/* Brand Wordmark & Official Emblem */}
           <Link
             to="/"
-            className="group flex flex-col justify-center cursor-pointer shrink-0"
+            className="group flex items-center gap-3 cursor-pointer shrink-0"
+            aria-label="Ember & Stone Home"
           >
-            <span
-              className="text-[17px] sm:text-[20px] tracking-[0.22em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors whitespace-nowrap"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
-              EMBER & STONE
-            </span>
-            <span className="text-[8.5px] tracking-[0.35em] text-[#c9973e] uppercase -mt-0.5 opacity-85 whitespace-nowrap">
-              Steakhouse · Chicago
-            </span>
+            <div className="relative flex items-center justify-center p-1.5 rounded-full bg-gradient-to-b from-[#1c120a] to-[#0d0905] border border-[#c9973e]/30 shadow-lg shadow-black/80 group-hover:border-[#c9973e] group-hover:shadow-[0_0_15px_rgba(211,26,36,0.35)] transition-all duration-300">
+              <BrandLogo
+                size={28}
+                variant="crimson"
+                showGlow={true}
+                animated={true}
+                idPrefix="nav-logo"
+              />
+            </div>
+            <div className="flex flex-col justify-center">
+              <span
+                className="text-[17px] sm:text-[20px] tracking-[0.22em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors whitespace-nowrap"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                EMBER & STONE
+              </span>
+              <span className="text-[8.5px] tracking-[0.35em] text-[#c9973e] uppercase -mt-0.5 opacity-85 whitespace-nowrap">
+                Steakhouse · Chicago
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav Links - Clean, Spacious, Single-Line */}

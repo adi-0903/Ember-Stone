@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Flame, ArrowRight, Sparkles, Wine, UtensilsCrossed } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
 interface PreloaderProps {
   onComplete: () => void;
@@ -214,8 +215,8 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           {/* Top Brand Header */}
           <header className="relative z-20 w-full px-6 sm:px-12 py-7 flex items-center justify-between">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-full border border-[#c9973e]/50 bg-black/60 backdrop-blur-md flex items-center justify-center text-[#c9973e] shadow-xl shadow-black/60 ring-1 ring-[#c9973e]/20">
-                <Flame className="w-4.5 h-4.5 animate-pulse text-[#d4a044]" />
+              <div className="w-11 h-11 rounded-full border border-[#c9973e]/50 bg-black/80 backdrop-blur-md flex items-center justify-center shadow-xl shadow-black/80 ring-1 ring-[#c9973e]/30">
+                <BrandLogo size={26} variant="crimson" showGlow={true} idPrefix="preloader-hdr-logo" />
               </div>
               <div>
                 <span className="text-[10.5px] tracking-[0.35em] uppercase text-[#c9973e] font-semibold block drop-shadow">
@@ -246,6 +247,13 @@ export default function Preloader({ onComplete }: PreloaderProps) {
               transition={{ duration: 1, ease: 'easeOut' }}
               className="flex flex-col items-center"
             >
+              {/* Emblem Centerpiece */}
+              <div className="relative mb-6">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-[#20110b] via-[#120a06] to-black border border-[#c9973e]/40 flex items-center justify-center shadow-[0_0_40px_rgba(211,26,36,0.3)] ring-1 ring-[#c9973e]/30">
+                  <BrandLogo size={58} variant="crimson" showGlow={true} idPrefix="preloader-hero-logo" />
+                </div>
+              </div>
+
               {/* Editorial Pill Marker */}
               <div className="inline-flex items-center gap-2.5 px-4.5 py-1.5 rounded-full border border-[#c9973e]/40 bg-black/65 backdrop-blur-md text-[#c9973e] text-xs tracking-[0.28em] uppercase font-medium mb-5 shadow-2xl">
                 <Sparkles className="w-3.5 h-3.5 text-[#d4a044]" />
