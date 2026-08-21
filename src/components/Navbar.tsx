@@ -105,39 +105,47 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
         id="main-navbar"
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
           isScrolled || location.pathname === '/menu' || location.pathname === '/bar'
-            ? 'h-20 bg-[#0d0905]/95 backdrop-blur-md border-b border-[#3a2816] shadow-xl shadow-black/70'
-            : 'h-20 md:h-24 bg-gradient-to-b from-[#0d0905]/90 via-[#0d0905]/40 to-transparent border-b border-transparent'
+            ? 'h-20 bg-[#0d0905]/95 backdrop-blur-xl border-b border-[#3a2816]/80 shadow-2xl shadow-black/80'
+            : 'h-20 md:h-24 bg-gradient-to-b from-[#090604]/95 via-[#090604]/60 to-transparent border-b border-white/[0.03]'
         }`}
       >
-        <div className="max-w-7xl mx-auto h-full px-6 sm:px-10 md:px-12 flex items-center justify-between">
-          {/* Brand Wordmark & Official Emblem (clicking goes Home) */}
-          <Link
-            to="/"
-            className="group flex items-center gap-3 sm:gap-3.5 cursor-pointer shrink-0"
-            aria-label="Ember & Stone Home"
-          >
-            <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-gradient-to-b from-[#1c120a] to-[#080503] border border-[#c9973e]/40 shadow-lg shadow-black/80 ring-1 ring-[#c9973e]/20 group-hover:border-[#c9973e] group-hover:shadow-[0_0_18px_rgba(201,151,62,0.35)] group-hover:scale-105 transition-all duration-300 p-0.5">
-              <img
-                src="/logo.jpg"
-                alt="Ember & Stone"
-                className="w-full h-full object-cover rounded-full"
-              />
-            </div>
-            <div className="flex flex-col justify-center">
-              <span
-                className="text-[17px] sm:text-[20px] tracking-[0.22em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors whitespace-nowrap"
-                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              >
-                EMBER & STONE
-              </span>
-              <span className="text-[8.5px] tracking-[0.35em] text-[#c9973e] uppercase -mt-0.5 opacity-85 whitespace-nowrap">
-                Steakhouse · Chicago
-              </span>
-            </div>
-          </Link>
+        <div className="w-full max-w-[1680px] mx-auto h-full px-5 sm:px-8 lg:px-12 xl:px-16 flex items-center justify-between gap-4">
+          {/* Brand Identity & Official Emblem (Left) */}
+          <div className="flex items-center gap-4 xl:gap-6 shrink-0">
+            <Link
+              to="/"
+              className="group flex items-center gap-3.5 sm:gap-4 cursor-pointer"
+              aria-label="Ember & Stone Home"
+            >
+              {/* Gold Ring Logo Frame */}
+              <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden bg-[#140c07] border border-[#c9973e]/50 shadow-xl shadow-black/90 ring-2 ring-[#c9973e]/20 group-hover:border-[#c9973e] group-hover:ring-[#c9973e]/40 group-hover:scale-105 transition-all duration-300 p-0.5 shrink-0">
+                <img
+                  src="/logo.jpg"
+                  alt="Ember & Stone"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
 
-          {/* Desktop Nav Links - Clean, Spacious, Single-Line */}
-          <nav className="hidden lg:flex items-center space-x-7 xl:space-x-8" aria-label="Main Navigation">
+              {/* Brand Typography */}
+              <div className="flex flex-col justify-center select-none">
+                <span
+                  className="text-[18px] sm:text-[21px] tracking-[0.24em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors leading-none uppercase whitespace-nowrap"
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                >
+                  EMBER & STONE
+                </span>
+                <span className="text-[8.5px] sm:text-[9px] tracking-[0.38em] text-[#c9973e] uppercase mt-1 opacity-90 whitespace-nowrap font-medium">
+                  Steakhouse · Chicago
+                </span>
+              </div>
+            </Link>
+
+            {/* Subtle Vertical Divider separating Brand from Nav */}
+            <div className="hidden xl:block h-7 w-px bg-gradient-to-b from-transparent via-[#c9973e]/30 to-transparent ml-2" />
+          </div>
+
+          {/* Desktop Navigation Links (Center) */}
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 2xl:space-x-10" aria-label="Main Navigation">
             {primaryLinks.map((link) => {
               const isCurrentPage = link.isRoute && location.pathname === link.href;
 
@@ -145,13 +153,13 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
                 <button
                   key={link.name}
                   onClick={() => handleNavClick(link)}
-                  className={`relative text-[11.5px] tracking-[0.18em] uppercase transition-colors py-1 cursor-pointer group whitespace-nowrap ${
+                  className={`relative text-[11.5px] xl:text-[12px] tracking-[0.2em] uppercase transition-all py-1.5 cursor-pointer group whitespace-nowrap ${
                     isCurrentPage
                       ? 'text-[#c9973e] font-semibold'
-                      : 'text-[#f5f0e8]/85 hover:text-[#c9973e]'
+                      : 'text-[#f5f0e8]/80 hover:text-[#f5f0e8]'
                   }`}
                 >
-                  {link.name}
+                  <span className="group-hover:text-[#c9973e] transition-colors">{link.name}</span>
                   <span
                     className={`absolute bottom-0 left-0 h-[1.5px] bg-[#c9973e] transition-all duration-300 ${
                       isCurrentPage ? 'w-full' : 'w-0 group-hover:w-full'
@@ -161,13 +169,15 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
               );
             })}
 
-            {/* Elegant "Discover ▾" Dropdown for Secondary Links */}
+            {/* Elegant "Discover ▾" Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className="flex items-center space-x-1 text-[11.5px] tracking-[0.18em] uppercase text-[#f5f0e8]/85 hover:text-[#c9973e] transition-colors py-1 cursor-pointer whitespace-nowrap"
+                className={`flex items-center space-x-1.5 text-[11.5px] xl:text-[12px] tracking-[0.2em] uppercase transition-all py-1.5 cursor-pointer whitespace-nowrap ${
+                  moreDropdownOpen ? 'text-[#c9973e]' : 'text-[#f5f0e8]/80 hover:text-[#f5f0e8]'
+                }`}
               >
-                <span>Discover</span>
+                <span className="hover:text-[#c9973e] transition-colors">Discover</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-[#c9973e] transition-transform duration-200 ${
                     moreDropdownOpen ? 'rotate-180' : ''
@@ -182,7 +192,7 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 p-2 bg-[#120c07] border border-[#c9973e]/40 rounded-xs shadow-2xl shadow-black backdrop-blur-xl z-50"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 p-2 bg-[#120c07]/98 border border-[#c9973e]/40 rounded-sm shadow-2xl shadow-black backdrop-blur-2xl z-50"
                   >
                     <div className="space-y-1">
                       {secondaryLinks.map((subLink) => (
@@ -191,10 +201,10 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
                           onClick={() => handleNavClick(subLink)}
                           className="w-full text-left p-2.5 rounded-xs hover:bg-[#1c130b] text-[#f5f0e8] hover:text-[#c9973e] transition-colors group cursor-pointer"
                         >
-                          <div className="text-[11px] tracking-[0.14em] uppercase font-medium">
+                          <div className="text-[11px] tracking-[0.16em] uppercase font-medium text-[#f5f0e8]/90 group-hover:text-[#c9973e]">
                             {subLink.name}
                           </div>
-                          <div className="text-[10px] text-[#f5f0e8]/50 group-hover:text-[#f5f0e8]/75 font-light">
+                          <div className="text-[10px] text-[#f5f0e8]/50 group-hover:text-[#f5f0e8]/75 font-light mt-0.5">
                             {subLink.desc}
                           </div>
                         </button>
@@ -206,33 +216,35 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
             </div>
           </nav>
 
-          {/* Right Action: Quick Info Toggle + Direct Reservation CTA */}
-          <div className="hidden sm:flex items-center space-x-3.5 md:space-x-4">
+          {/* Right Actions: Quick Info + Phone Concierge + Reserve Table CTA */}
+          <div className="hidden sm:flex items-center space-x-3 md:space-x-4 shrink-0">
             {/* Quick Info Drawer Toggle Button */}
             {onToggleInfo && (
               <button
                 id="navbar-info-toggle-btn"
                 onClick={onToggleInfo}
-                className="group flex items-center gap-1.5 px-3 py-2 rounded-xs border border-[#3a2816] hover:border-[#c9973e]/80 bg-[#140e08]/90 hover:bg-[#1f140b] text-[#f5f0e8]/85 hover:text-[#c9973e] transition-all text-[11px] font-mono tracking-wider uppercase cursor-pointer"
+                className="group flex items-center gap-1.5 px-3 py-2 rounded-full border border-[#c9973e]/30 hover:border-[#c9973e] bg-[#140e08]/80 hover:bg-[#1f140b] text-[#f5f0e8]/85 hover:text-[#c9973e] transition-all text-[11px] tracking-[0.15em] uppercase cursor-pointer"
                 title="Quick Info: Address, Hours & Contact"
               >
                 <Info className="w-3.5 h-3.5 text-[#c9973e] group-hover:scale-110 transition-transform" />
-                <span className="hidden xl:inline">Info</span>
+                <span className="hidden xl:inline font-medium">Info</span>
               </button>
             )}
 
+            {/* Direct Phone Concierge */}
             <a
               href="tel:+13125550182"
-              className="hidden 2xl:flex items-center space-x-2 text-[11px] tracking-[0.1em] text-[#f5f0e8]/70 hover:text-[#c9973e] transition-colors whitespace-nowrap"
+              className="hidden 2xl:flex items-center space-x-2 text-[11px] tracking-[0.14em] text-[#f5f0e8]/70 hover:text-[#c9973e] transition-colors px-2 py-1 whitespace-nowrap"
             >
               <Phone className="w-3.5 h-3.5 text-[#c9973e]" />
-              <span>312.555.0182</span>
+              <span className="font-mono">312.555.0182</span>
             </a>
 
+            {/* Reserve Table CTA Button */}
             <button
               id="nav-reserve-btn"
               onClick={handleReserveDirect}
-              className="px-5 sm:px-6 py-2.5 bg-[#c9973e] hover:bg-[#d8a84e] text-[#0d0905] text-[11px] tracking-[0.2em] uppercase font-semibold transition-all duration-300 rounded-xs shadow-md shadow-[#c9973e]/20 hover:shadow-[#c9973e]/30 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+              className="relative group px-5 sm:px-6 py-2.5 bg-gradient-to-r from-[#c9973e] via-[#dca94e] to-[#c9973e] hover:from-[#dca94e] hover:to-[#ebbc63] text-[#0d0905] text-[11px] sm:text-[11.5px] tracking-[0.22em] uppercase font-bold transition-all duration-300 rounded-sm shadow-[0_4px_20px_rgba(201,151,62,0.25)] hover:shadow-[0_6px_25px_rgba(201,151,62,0.4)] hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
             >
               Reserve Table
             </button>
@@ -244,7 +256,7 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
               <button
                 id="mobile-info-toggle-btn"
                 onClick={onToggleInfo}
-                className="p-2 rounded-xs border border-[#3a2816] bg-[#140e08] text-[#c9973e] hover:text-[#d4a044] transition-colors cursor-pointer"
+                className="p-2 rounded-full border border-[#c9973e]/30 bg-[#140e08] text-[#c9973e] hover:text-[#d4a044] transition-colors cursor-pointer"
                 aria-label="Restaurant Info"
               >
                 <Info className="w-4.5 h-4.5" />
