@@ -250,14 +250,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
               <div className="relative mb-6">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-black/80 border border-[#c9973e]/40 flex items-center justify-center shadow-[0_0_40px_rgba(211,26,36,0.35)] ring-1 ring-[#c9973e]/30 p-2">
                   <img
-                    src="/logo.jpeg"
-                    onError={(e) => {
-                      // Fallback to .jpg if .jpeg fails
-                      const target = e.currentTarget;
-                      if (!target.src.endsWith('logo.jpg')) {
-                        target.src = '/logo.jpg';
-                      }
-                    }}
+                    src="/logo.jpg"
                     alt="Ember & Stone Logo"
                     className="w-full h-full object-contain"
                   />

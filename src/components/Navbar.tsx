@@ -110,20 +110,30 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
         }`}
       >
         <div className="max-w-7xl mx-auto h-full px-6 sm:px-10 md:px-12 flex items-center justify-between">
-          {/* Brand Wordmark (clicking goes Home) */}
+          {/* Brand Wordmark & Official Emblem (clicking goes Home) */}
           <Link
             to="/"
-            className="group flex flex-col justify-center cursor-pointer shrink-0"
+            className="group flex items-center gap-3 sm:gap-3.5 cursor-pointer shrink-0"
+            aria-label="Ember & Stone Home"
           >
-            <span
-              className="text-[17px] sm:text-[20px] tracking-[0.22em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors whitespace-nowrap"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
-              EMBER & STONE
-            </span>
-            <span className="text-[8.5px] tracking-[0.35em] text-[#c9973e] uppercase -mt-0.5 opacity-85 whitespace-nowrap">
-              Steakhouse · Chicago
-            </span>
+            <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-gradient-to-b from-[#1c120a] to-[#080503] border border-[#c9973e]/40 shadow-lg shadow-black/80 ring-1 ring-[#c9973e]/20 group-hover:border-[#c9973e] group-hover:shadow-[0_0_18px_rgba(201,151,62,0.35)] group-hover:scale-105 transition-all duration-300 p-0.5">
+              <img
+                src="/logo.jpg"
+                alt="Ember & Stone"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            <div className="flex flex-col justify-center">
+              <span
+                className="text-[17px] sm:text-[20px] tracking-[0.22em] font-semibold text-[#f5f0e8] group-hover:text-[#c9973e] transition-colors whitespace-nowrap"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                EMBER & STONE
+              </span>
+              <span className="text-[8.5px] tracking-[0.35em] text-[#c9973e] uppercase -mt-0.5 opacity-85 whitespace-nowrap">
+                Steakhouse · Chicago
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav Links - Clean, Spacious, Single-Line */}
@@ -265,6 +275,21 @@ export default function Navbar({ onReserveClick, onToggleInfo }: NavbarProps) {
             className="fixed inset-0 top-20 z-30 bg-[#0d0905]/98 backdrop-blur-2xl border-b border-[#3a2816] flex flex-col justify-between p-6 sm:p-8 lg:hidden overflow-y-auto"
           >
             <div className="flex flex-col space-y-4 pt-2">
+              {/* Mobile Drawer Brand Header */}
+              <div className="flex items-center gap-3 pb-3 border-b border-[#3a2816]">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#180f08] border border-[#c9973e]/40 flex items-center justify-center p-0.5 shadow-md shadow-black">
+                  <img src="/logo.jpg" alt="Ember & Stone" className="w-full h-full object-cover rounded-full" />
+                </div>
+                <div>
+                  <span className="text-base tracking-[0.2em] font-semibold text-[#f5f0e8] block" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                    EMBER & STONE
+                  </span>
+                  <span className="text-[9px] tracking-[0.3em] uppercase text-[#c9973e] block -mt-0.5">
+                    Steakhouse · Chicago
+                  </span>
+                </div>
+              </div>
+
               <span className="text-[10px] uppercase tracking-[0.25em] text-[#c9973e] font-mono mb-1">
                 Navigation
               </span>
